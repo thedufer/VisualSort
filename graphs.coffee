@@ -5,13 +5,22 @@ for x in [0...VA.length]
     if VA.gt(x, y)
       VA.swap(x, y)
   """
-  insert: """
+  select: """
 for x in [0...VA.length - 1]
   minIndex = x
   for y in [x + 1...VA.length]
     if VA.lt(y, minIndex)
       minIndex = y
-  VA.insert(minIndex, x)
+  VA.swap(minIndex, x)
+  """
+  insert: """
+for x in [1...VA.length]
+  y = 0
+  while VA.gt(x, y)
+    y++
+    if y == x
+      break
+  VA.insert(x, y)
   """
   quick: """
 bubblesort = (left, right) ->
