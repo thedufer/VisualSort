@@ -2,16 +2,14 @@ sorts = {
   bubble: """
 for x in [0...VA.length]
   for y in [x + 1...VA.length]
-    VA.highlight([x, y])
-    if VA.get(x) > VA.get(y)
+    if VA.gt(x, y)
       VA.swap(x, y)
   """
   insert: """
 for x in [0...VA.length - 1]
   minIndex = x
   for y in [x + 1...VA.length]
-    VA.highlight([minIndex, y])
-    if VA.get(y) < VA.get(minIndex)
+    if VA.lt(y, minIndex)
       minIndex = y
   VA.insert(minIndex, x)
   """
@@ -32,11 +30,13 @@ class VisualArray
     @stepLength = 50
     @animationQueue = []
     @working = false
-    @quickHighlight = false
+    @quickHighlight = true
+    @quickCompare = true
     @colors = {
       normal: "rgb(0,0,0)"
       swap: "rgb(255, 0, 0)"
       highlight: "rgb(0,255,0)"
+      compare: "rgb(255,255,0)"
       insert: "rgb(0,0,255)"
       slide: "rgb(127,127,255)"
     }
@@ -86,6 +86,8 @@ class VisualArray
       @values[@length - x - 1] = tmp
 
   swap: (i, j) =>
+    if i == j
+      return
     @animationQueue.push(type: "swap", i: i, j: j)
     tmp = @values[i]
     @values[i] = @values[j]
@@ -93,6 +95,8 @@ class VisualArray
     @swaps++
 
   insert: (i, j) =>
+    if i == j
+      return
     @animationQueue.push(type: "insert", i: i, j: j)
     tmp = @values[i]
     k = i
@@ -106,6 +110,22 @@ class VisualArray
         k--
     @values[j] = tmp
     @inserts++
+  
+  lt: (i, j) =>
+    @animationQueue.push(type: "compare", i: i, j: j)
+    @values[i] < @values[j]
+
+  gt: (i, j) =>
+    @animationQueue.push(type: "compare", i: i, j: j)
+    @values[i] > @values[j]
+
+  lte: (i, j) =>
+    @animationQueue.push(type: "compare", i: i, j: j)
+    @values[i] <= @values[j]
+
+  gte: (i, j) =>
+    @animationQueue.push(type: "compare", i: i, j: j)
+    @values[i] >= @values[j]
 
   highlight: (indices) =>
     if !$.isArray indices
@@ -159,6 +179,12 @@ class VisualArray
       for index in step.indices
         @drawIndex(index)
       setTimeout @play, if @quickHighlight then @stepLength / 10 else @stepLength
+    else if step.type == "compare"
+      @redraw()
+      @ctx.fillStyle = @colors.compare
+      @drawIndex(step.i)
+      @drawIndex(step.j)
+      setTimeout @play, if @quickCompare then @stepLength / 10 else @stepLength
     else if step.type == "insert"
       if step.i < step.j
         slideRange = [step.i..step.j]
@@ -243,6 +269,11 @@ $("#js-set-speed").click ->
     VA.quickHighlight = true
   else
     VA.quickHighlight = false
+
+  if $("#js-quick-compare").is(":checked")
+    VA.quickCompare = true
+  else
+    VA.quickCompare = false
 
 $(".js-show-sort").click (e) ->
   $("#js-code").val(sorts[e.currentTarget.id])
