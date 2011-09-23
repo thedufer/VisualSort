@@ -15,6 +15,7 @@ for x in [0...VA.length - 1]
       minIndex = y
   VA.insert(minIndex, x)
   """
+  clear: ""
 }
 
 sleep = (ms) ->
@@ -135,6 +136,7 @@ class VisualArray
     step = @animationQueue.shift()
     if !step?
       @working = false
+      @redraw()
       return
     else if step.type == "swap"
       @redraw()
