@@ -16,6 +16,18 @@
   background-color:#eee;
 }
 
+#description-wrapper{
+  padding:50px;
+}
+
+ul {
+  padding-left:2.5em;
+}
+
+#description{
+  background-color:#ddd;
+}
+
 #wrapper{
   width:800px;
   margin:0 auto;
@@ -30,7 +42,6 @@
 #main{
   width:600px;
   float:left;
-  background-color:#aaa;
 }
 
 #right-bar{

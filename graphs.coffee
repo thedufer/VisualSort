@@ -13,6 +13,44 @@ for x in [0...VA.length - 1]
       minIndex = y
   VA.insert(minIndex, x)
   """
+  quick: """
+bubblesort = (left, right) ->
+  #left, right are inclusive
+  for x in [left..right]
+    for y in [x + 1..right]
+      if VA.gt(x, y)
+        VA.swap(x, y)
+
+quicksort = (left, right) ->
+  if right <= left
+    return
+  #left, right are inclusive
+  #pivot is the left-most value
+  if right - left < 5
+    bubblesort(left, right)
+    return
+  pivot = left
+  leftMove = left + 1
+  rightMove = right
+  while leftMove < rightMove
+    if VA.lt(leftMove, pivot)
+      leftMove++
+    else if VA.gt(rightMove, pivot)
+      rightMove--
+    else
+      VA.swap(rightMove, leftMove)
+  #now, leftMove == rightMove
+  if VA.gt(leftMove, pivot)
+    leftMove -= 2
+  else
+    rightMove++
+    leftMove--
+  VA.swap(leftMove + 1, pivot)
+  quicksort(left, leftMove)
+  quicksort(rightMove, right)
+
+quicksort(0, VA.length - 1)
+  """
   clear: ""
 }
 
@@ -110,20 +148,25 @@ class VisualArray
         k--
     @values[j] = tmp
     @inserts++
+    @shifts += Math.abs(j - i)
   
   lt: (i, j) =>
+    @compares++
     @animationQueue.push(type: "compare", i: i, j: j)
     @values[i] < @values[j]
 
   gt: (i, j) =>
+    @compares++
     @animationQueue.push(type: "compare", i: i, j: j)
     @values[i] > @values[j]
 
   lte: (i, j) =>
+    @compares++
     @animationQueue.push(type: "compare", i: i, j: j)
     @values[i] <= @values[j]
 
   gte: (i, j) =>
+    @compares++
     @animationQueue.push(type: "compare", i: i, j: j)
     @values[i] >= @values[j]
 
@@ -136,6 +179,8 @@ class VisualArray
     @animationValues = @values.slice()
     @swaps = 0
     @inserts = 0
+    @shifts = 0
+    @compares = 0
 
   starting: =>
     @working = true
@@ -234,12 +279,15 @@ evaluate = (code) ->
   try
     CoffeeScript.eval(code)
   catch error
-    $("#js-error").html(error.message)
+    $("#js-error").html(error.message + "<br /><br />")
   VA.play()
 
 $("#js-run").click ->
   evaluate $("#js-code").val()
-  $("#js-result").html("# of swaps: #{VA.swaps}<br /># of inserts: #{VA.inserts}")
+  $("#js-swaps").html(VA.swaps)
+  $("#js-inserts").html(VA.inserts)
+  $("#js-shifts").html(Math.floor(VA.shifts / VA.inserts))
+  $("#js-compares").html(VA.compares)
 
 $("#js-set-values").click ->
   if VA.working

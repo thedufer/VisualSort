@@ -28,6 +28,13 @@
     <br />
     <div id="right-bar">
       <div id="js-error"></div>
+      # of swaps: <span id="js-swaps"></span>
+      <br />
+      # of inserts: <span id="js-inserts"></span>
+      <br />
+      # of shifts per insert: <span id="js-shifts"></span>
+      <br />
+      # of comparisons: <span id="js-compares"></span>
       <div id="js-result"></div>
     </div>
     <div id="main">
@@ -42,6 +49,35 @@
       <button type="button" class="js-show-sort" id="bubble">Bubble</button>
       <button type="button" class="js-show-sort" id="insert">Insertion</button>
       <button type="button" class="js-show-sort" id="quick">Quick</button>
+      <div id="description-wrapper">
+        <div id="description">
+          Write some code in <a href="http://jashkenas.github.com/coffee-script/">CoffeeScript</a> and hit run.  The array will show what's going on.
+          <br />
+          <br />
+          Use the following methods on <span class="code">VA</span>:
+          <br />
+          <br />
+          <ul>
+            <li><span class="code">swap(i, j)</span>: Swap the values at indices i and j.</li>
+            <li><span class="code">insert(i, j)</span>: Move the value at index i to index j and slide the elements in between to fill.</li>
+            <li><span class="code">get(i)</span>: Return the value of the element at i.</li>
+            <li><span class="code">lt(i, j)</span>: Return the result of <span class="code">VA.get(i) < VA.get(j)</span>.</li>
+            <li><span class="code">lte(i, j)</span>: Return the result of <span class="code">VA.get(i) <= VA.get(j)</span>.</li>
+            <li><span class="code">gt(i, j)</span>: Return the result of <span class="code">VA.get(i) > VA.get(j)</span>.</li>
+            <li><span class="code">gte(i, j)</span>: Return the result of <span class="code">VA.get(i) >= VA.get(j)</span>.</li>
+            <li><span class="code">highlight(i)</span>: Highlight the i<sup>th</sup> element.</li>
+            <li><span class="code">highlight([i<sub>1</sub>, i<sub>2</sub>...i<sub>n</sub>])</span>: Highlight the i<sub>1</sub><sup>th</sup>, i<sub>2</sub><sup>th</sup>... i<sub>n</sub><sup>th</sup> elements.</li>
+          </ul>
+          <br />
+          Try out the prewritten sorts for syntax examples.
+          <br />
+          <br />
+          Note: Nothing will display if there is an infinite loop.
+          <br />
+          <br />
+          Email me at <span class="code">thedufer at gmail dot com</span> with comments/questions!
+        </div>
+      </div>
     </div>
   </div>
   </div>
