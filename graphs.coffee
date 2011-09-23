@@ -37,7 +37,7 @@ class VisualArray
       swap: "rgb(255, 0, 0)"
       highlight: "rgb(0,255,0)"
       insert: "rgb(0,0,255)"
-      slide: "rgb(0,0,127)"
+      slide: "rgb(127,127,255)"
     }
 
   setLength: (length) =>
