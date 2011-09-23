@@ -1,0 +1,48 @@
+*{
+  margin:0;
+  padding:0;
+}
+
+#header{
+  margin:0 auto;
+  text-align:center;
+  padding-top:20px;
+  padding-bottom:20px;
+}
+
+#background{
+  width:900px;
+  margin:0 auto;
+  background-color:#eee;
+}
+
+#wrapper{
+  width:800px;
+  margin:0 auto;
+  padding-top:5px;
+  padding-bottom:50px;
+}
+
+#js-code{
+  width:100%;
+}
+
+#main{
+  width:600px;
+  float:left;
+  background-color:#aaa;
+}
+
+#right-bar{
+  width:200px;
+  float:right;
+  background-color:#ddd;
+}
+
+#footer{
+  clear:both;
+}
+
+.code{
+  font-family:Monaco, Consolas, "Lucida Console", monospace;
+}

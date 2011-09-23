@@ -1,0 +1,46 @@
+<html>
+<head>
+  <link href="main.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="coffee-script.js"></script>
+  <script type="text/coffeescript" src="graphs.coffee"></script>
+  <script type="text/javascript" src="jquery-1.6.4.js"></script>
+</head>
+<body>
+  <div id="background">
+  <div id="wrapper">
+    <div id="header">
+      <h1>Sorting Visualizer</h1>
+    </div>
+    <canvas id="js-canvas" width="800" height="200">Looks like your browser doesn't support the canvas element.  Try something newer, like <a href="http://www.google.com/chrome">Google Chrome</a>.</canvas>
+    <br />
+    Length: <input type="text" id="js-length" value="100" />
+    <select id="js-state">
+      <option value="random" selected>Random</option>
+      <option value="sort">Sorted</option>
+      <option value="reverse">Reverse Sorted</option>
+    </select>
+    <button type="button" id="js-set-values">Set</button>
+    <br />
+    Speed: <input type="text" id="js-speed" value="50" />
+    Quick Highlight: <input type="checkbox" id="js-quick-highlight" />
+    <button type="button" id="js-set-speed">Set</button>
+    <br />
+    <div id="right-bar">
+      <div id="js-error"></div>
+      <div id="js-result"></div>
+    </div>
+    <div id="main">
+      <textarea id="js-code" class="code" rows="20"></textarea>
+    </div>
+    <br />
+    <div id="footer">
+      <button type="button" id="js-run">Run That Code!</button>
+      <br />
+      Prewritten sorts:
+      <button type="button" class="js-show-sort" id="bubble">Bubble</button>
+      <button type="button" class="js-show-sort" id="insert">Insertion</button>
+    </div>
+  </div>
+  </div>
+</body>
+</html>
