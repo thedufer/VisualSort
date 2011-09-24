@@ -1,3 +1,5 @@
+$("#js-stop").hide()
+
 sorts = {
   bubble: """
 for x in [0...VA.length]
@@ -77,6 +79,7 @@ class VisualArray
     @stepLength = 50
     @animationQueue = []
     @working = false
+    @stop = false
     @quickHighlight = true
     @quickCompare = true
     @colors = {
@@ -208,8 +211,13 @@ class VisualArray
   
   playStep: =>
     step = @animationQueue.shift()
-    if !step?
+    if !step? || @stop
+      $("#js-stop").hide()
+      $("#js-run").show()
+      @stop = false
       @working = false
+      @animationQueue = []
+      @values = @animationValues.slice()
       @redraw()
       return
     else if step.type == "swap"
@@ -292,11 +300,16 @@ evaluate = (code) ->
   VA.play()
 
 $("#js-run").click ->
+  $("#js-run").hide()
+  $("#js-stop").show()
   evaluate $("#js-code").val()
   $("#js-swaps").html(VA.swaps)
   $("#js-inserts").html(VA.inserts)
-  $("#js-shifts").html(Math.floor(VA.shifts / VA.inserts))
+  $("#js-shifts").html(if VA.inserts then Math.floor(VA.shifts / VA.inserts) else 0)
   $("#js-compares").html(VA.compares)
+
+$("#js-stop").click ->
+  VA.stop = true
 
 $("#js-set-values").click ->
   if VA.working
