@@ -46,6 +46,7 @@ ul {
 
 #js-code{
   width:100%;
+  resize:vertical;
 }
 
 #main{
