@@ -79,6 +79,7 @@ class VisualArray
     @height = 200
     @pxWidth = 800
     @maxLength = @pxWidth / 2
+    @minLength = 3
     @stepLength = 50
     @animationQueue = []
     @working = false
@@ -97,7 +98,7 @@ class VisualArray
   setLength: (length) =>
     if @working
       return
-    @length = Math.max 2, Math.min @maxLength, length
+    @length = Math.max @minLength, Math.min @maxLength, length
     @values =  ( value * @height / @length for value in [1..@length] )
     @barWidth = 1
     while @pxWidth / @barWidth / 2 > @length
@@ -328,6 +329,7 @@ $("#js-set-values").click ->
   len = $("#js-length").val()
   if isFinite len
     VA.setLength +len
+  $("#js-length").val VA.length
 
   state = $("#js-state").val()
   if state == "random"
