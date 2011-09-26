@@ -4,6 +4,7 @@
   <script type="text/javascript" src="coffee-script.js"></script>
   <script type="text/coffeescript" src="graphs.coffee"></script>
   <script type="text/javascript" src="jquery-1.6.4.js"></script>
+  <script type="text/javascript" src="underscore-min.js"></script>
 </head>
 <body>
   <div id="background">
@@ -69,6 +70,7 @@
             <li><span class="code">gte(i, j)</span>: Return the result of <span class="code">VA.get(i) >= VA.get(j)</span>.</li>
             <li><span class="code">highlight(i)</span>: Highlight the i<sup>th</sup> element.</li>
             <li><span class="code">highlight([i<sub>1</sub>, i<sub>2</sub>...i<sub>n</sub>])</span>: Highlight the i<sub>1</sub><sup>th</sup>, i<sub>2</sub><sup>th</sup>... i<sub>n</sub><sup>th</sup> elements.</li>
+            <li><span class="code">locals</span>: A map (initially empty) where you can store primitives that you want to see as the sort animates.  See bubble sort for an example.</li>
           </ul>
           <br />
           Try out the prewritten sorts for syntax examples.
@@ -82,6 +84,9 @@
             </li>
             <li>
               The "Stop" button won't save the state of your code, but will save the state of the array.
+            </li>
+            <li>
+              The items are the integers [1..length].
             </li>
           </ul>
           <br />

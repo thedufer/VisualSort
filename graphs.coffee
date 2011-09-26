@@ -2,13 +2,14 @@ $("#js-stop").hide()
 
 sorts = {
   bubble: """
-swapped = true
-while swapped
-  swapped = false
+VA.locals.swapped = true
+while VA.locals.swapped
+  VA.locals.swapped = false
   for x in [0...VA.length - 1]
+    VA.locals.x = x
     if VA.gt(x, x + 1)
       VA.swap(x, x + 1)
-      swapped = true
+      VA.locals.swapped = true
   """
   select: """
 for x in [0...VA.length - 1]
@@ -28,7 +29,7 @@ for x in [1...VA.length]
   VA.insert(x, y)
   """
   quick: """
-bubblesort = (left, right) ->
+slowsort = (left, right) ->
   #left, right are inclusive
   for x in [left..right]
     for y in [x + 1..right]
@@ -41,7 +42,7 @@ quicksort = (left, right) ->
   #left, right are inclusive
   #pivot is the left-most value
   if right - left < 5
-    bubblesort(left, right)
+    slowsort(left, right)
     return
   pivot = left
   leftMove = left + 1
@@ -99,13 +100,16 @@ class VisualArray
     if @working
       return
     @length = Math.max @minLength, Math.min @maxLength, length
-    @values =  ( value * @height / @length for value in [1..@length] )
+    @values =  [1..@length]
     @barWidth = 1
     while @pxWidth / @barWidth / 2 > @length
       @barWidth++
 
+  scale: (value) =>
+    @height / @length * value
+
   drawIndex: (index) =>
-    @ctx.fillRect(2 * index * @barWidth, @height - @animationValues[index], @barWidth, @animationValues[index])
+    @ctx.fillRect(2 * index * @barWidth, @height - @scale(@animationValues[index]), @barWidth, @scale(@animationValues[index]))
 
   redraw: =>
     @ctx.clearRect(0, 0, @pxWidth, @height)
@@ -144,6 +148,7 @@ class VisualArray
     dict.inserts = @inserts
     dict.shifts = @shifts
     dict.compares = @compares
+    dict.locals = _.extend {}, @locals
     @animationQueue.push dict
 
   swap: (i, j) =>
@@ -200,6 +205,7 @@ class VisualArray
   
   saveInitialState: =>
     @animationValues = @values.slice()
+    @locals = {}
     @swaps = 0
     @inserts = 0
     @shifts = 0
@@ -227,6 +233,10 @@ class VisualArray
       $("#js-inserts").html(step.inserts)
       $("#js-shifts").html(if step.inserts then Math.floor(step.shifts / step.inserts) else 0)
       $("#js-compares").html(step.compares)
+      localsString = ""
+      for k, v of step.locals
+        localsString += "#{k}: #{v}<br />"
+      $("#js-result").html(localsString)
     if !step? || @stop
       $("#js-stop").hide()
       $("#js-run").show()
