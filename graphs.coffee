@@ -91,7 +91,7 @@ class VisualArray
       normal: "rgb(0,0,0)"
       swap: "rgb(255, 0, 0)"
       highlight: "rgb(0,255,0)"
-      compare: "rgb(255,255,0)"
+      compare: "rgb(127,0,200)"
       insert: "rgb(0,0,255)"
       slide: "rgb(127,127,255)"
     }
