@@ -2,10 +2,13 @@ $("#js-stop").hide()
 
 sorts = {
   bubble: """
-for x in [0...VA.length]
-  for y in [x + 1...VA.length]
-    if VA.gt(x, y)
-      VA.swap(x, y)
+swapped = true
+while swapped
+  swapped = false
+  for x in [0...VA.length - 1]
+    if VA.gt(x, x + 1)
+      VA.swap(x, x + 1)
+      swapped = true
   """
   select: """
 for x in [0...VA.length - 1]
@@ -135,19 +138,28 @@ class VisualArray
       @values[x] = @values[@length - x - 1]
       @values[@length - x - 1] = tmp
 
+  animationQueuePush: (dict) =>
+    dict.swaps = @swaps
+    dict.inserts = @inserts
+    dict.shifts = @shifts
+    dict.compares = @compares
+    @animationQueue.push dict
+
   swap: (i, j) =>
+    @swaps++
     if i == j
       return
-    @animationQueue.push(type: "swap", i: i, j: j)
+    @animationQueuePush(type: "swap", i: i, j: j)
     tmp = @values[i]
     @values[i] = @values[j]
     @values[j] = tmp
-    @swaps++
 
   insert: (i, j) =>
+    @inserts++
+    @shifts += Math.abs(j - i)
     if i == j
       return
-    @animationQueue.push(type: "insert", i: i, j: j)
+    @animationQueuePush(type: "insert", i: i, j: j)
     tmp = @values[i]
     k = i
     if i < j
@@ -159,27 +171,25 @@ class VisualArray
         @values[k] = @values[k - 1]
         k--
     @values[j] = tmp
-    @inserts++
-    @shifts += Math.abs(j - i)
   
   lt: (i, j) =>
     @compares++
-    @animationQueue.push(type: "compare", i: i, j: j)
+    @animationQueuePush(type: "compare", i: i, j: j)
     @values[i] < @values[j]
 
   gt: (i, j) =>
     @compares++
-    @animationQueue.push(type: "compare", i: i, j: j)
+    @animationQueuePush(type: "compare", i: i, j: j)
     @values[i] > @values[j]
 
   lte: (i, j) =>
     @compares++
-    @animationQueue.push(type: "compare", i: i, j: j)
+    @animationQueuePush(type: "compare", i: i, j: j)
     @values[i] <= @values[j]
 
   gte: (i, j) =>
     @compares++
-    @animationQueue.push(type: "compare", i: i, j: j)
+    @animationQueuePush(type: "compare", i: i, j: j)
     @values[i] >= @values[j]
 
   highlight: (indices) =>
@@ -211,6 +221,11 @@ class VisualArray
   
   playStep: =>
     step = @animationQueue.shift()
+    if step?
+      $("#js-swaps").html(step.swaps)
+      $("#js-inserts").html(step.inserts)
+      $("#js-shifts").html(if step.inserts then Math.floor(step.shifts / step.inserts) else 0)
+      $("#js-compares").html(step.compares)
     if !step? || @stop
       $("#js-stop").hide()
       $("#js-run").show()
@@ -303,10 +318,6 @@ $("#js-run").click ->
   $("#js-run").hide()
   $("#js-stop").show()
   evaluate $("#js-code").val()
-  $("#js-swaps").html(VA.swaps)
-  $("#js-inserts").html(VA.inserts)
-  $("#js-shifts").html(if VA.inserts then Math.floor(VA.shifts / VA.inserts) else 0)
-  $("#js-compares").html(VA.compares)
 
 $("#js-stop").click ->
   VA.stop = true
@@ -330,20 +341,25 @@ $("#js-set-values").click ->
   VA.saveInitialState()
   VA.redraw()
 
-$("#js-set-speed").click ->
+$("#js-speed").change ->
   speed = $("#js-speed").val()
   if isFinite speed
     VA.stepLength = +speed
-  
+  return
+
+$("#js-quick-highlight").click ->
   if $("#js-quick-highlight").is(":checked")
     VA.quickHighlight = true
   else
     VA.quickHighlight = false
+  return
 
+$("#js-quick-compare").click ->
   if $("#js-quick-compare").is(":checked")
     VA.quickCompare = true
   else
     VA.quickCompare = false
+  return
 
 $(".js-show-sort").click (e) ->
   $("#js-code").val(sorts[e.currentTarget.id])

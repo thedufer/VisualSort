@@ -21,10 +21,9 @@
     </select>
     <button type="button" id="js-set-values">Set</button>
     <br />
-    Speed: <input type="text" id="js-speed" value="50" />
+    Speed: <input type="range" id="js-speed" min="10" value="50" max="500" step="10" />
     Quick Highlight: <input type="checkbox" id="js-quick-highlight" checked />
     Quick Compare: <input type="checkbox" id="js-quick-compare" checked />
-    <button type="button" id="js-set-speed">Set</button>
     <br />
     <div id="right-bar">
       <div id="js-error"></div>
@@ -42,9 +41,11 @@
     </div>
     <br />
     <div id="footer">
-      <button type="button" id="js-run">Run That Code!</button>
-      <button type="button" id="js-stop">Stop</button>
-      <button type="button" class="js-show-sort" id="clear">Clear</button>
+      <div id="footer-buttons">
+        <button type="button" id="js-run" class="footer-button">Run That Code!</button>
+        <button type="button" id="js-stop" class="footer-button">Stop</button>
+        <button type="button" class="js-show-sort footer-button" id="clear">Clear</button>
+      </div>
       <br />
       Prewritten sorts:
       <button type="button" class="js-show-sort" id="bubble">Bubble</button>
@@ -74,7 +75,11 @@
           Try out the prewritten sorts for syntax examples.
           <br />
           <br />
-          Note: Nothing will display if there is an infinite loop.
+          Notes:
+          <br />
+          Nothing will display if there is an infinite loop.
+          <br />
+          The "Stop" button won't save the state of your code, but will save the state of the array.
           <br />
           <br />
           Email me at <span class="code">thedufer at gmail dot com</span> with comments/questions!
