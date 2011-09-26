@@ -66,6 +66,26 @@ quicksort = (left, right) ->
 
 quicksort(0, VA.length - 1)
   """
+  radix: """
+sort = (begin, end, bit) ->
+  i = begin
+  j = end
+  mask = 1 << bit
+  while i < j
+    while i < j and !(VA.get(i) & mask)
+      ++i
+    while i < j and (VA.get(j - 1) & mask)
+      --j
+    if i < j
+      VA.swap(i++, --j)
+
+  if bit and i > begin
+    sort(begin, i, bit - 1)
+  if bit and i < end
+    sort(i, end, bit - 1)
+
+sort(0, VA.length, 30)
+  """
   clear: ""
 }
 
