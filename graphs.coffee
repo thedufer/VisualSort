@@ -165,6 +165,7 @@ class VisualArray
     @maxLength = @pxWidth / 2
     @minLength = 3
     @stepLength = 50
+    @maxRandom = Math.pow(2,10)
     @animationQueue = []
     @working = false
     @stop = false
@@ -184,16 +185,19 @@ class VisualArray
     if @working
       return
     @length = Math.max @minLength, Math.min @maxLength, length
-    @values =  [1..@length]
+    @values = (Math.floor(Math.random() * @maxRandom) for x in [1..@length]).sort((a,b)->a-b)
+    lastVal = null
+    @maxIndex = 1
+    @indices = _.map(@values, ((a) -> ++@maxIndex if a != lastVal; lastVal = a; @maxIndex), this)
     @barWidth = 1
     while @pxWidth / @barWidth / 2 > @length
       @barWidth++
 
   scale: (value) =>
-    @height / @length * value
+    @height / @maxIndex * value
 
   drawIndex: (index) =>
-    @ctx.fillRect(2 * index * @barWidth, @height - @scale(@animationValues[index]), @barWidth, @scale(@animationValues[index]))
+    @ctx.fillRect(2 * index * @barWidth, @height - @scale(@animationIndices[index]), @barWidth, @scale(@animationIndices[index]))
 
   redraw: =>
     @ctx.clearRect(0, 0, @pxWidth, @height)
@@ -205,30 +209,23 @@ class VisualArray
       @drawIndex(index)
 
   shuffle: =>
-    order = ( Math.random() for x in [0...@length] )
-    for x in [0...@length]
-      for y in [x + 1...@length]
-        if order[x] > order[y]
-          tmp = order[x]
-          order[x] = order[y]
-          order[y] = tmp
-          tmp = @values[x]
-          @values[x] = @values[y]
-          @values[y] = tmp
+    # Fisher-Yates shuffle
+    for i in [@length-1..1]
+      j = Math.floor(Math.random() * (i+1))
+      [@values[i], @values[j]] = [@values[j], @values[i]]
+      [@indices[i], @indices[j]] = [@indices[j], @indices[i]]
 
   sort: =>
     for x in [0...@length]
       for y in [x + 1...@length]
         if @values[x] > @values[y]
-          tmp = @values[x]
-          @values[x] = @values[y]
-          @values[y] = tmp
+          [@values[x], @values[y]] = [@values[y], @values[x]]
+          [@indices[x], @indices[y]] = [@indices[y], @indices[x]]
 
   reverse: =>
     for x in [0...@length / 2]
-      tmp = @values[x]
-      @values[x] = @values[@length - x - 1]
-      @values[@length - x - 1] = tmp
+      [@values[x], @values[@length - x - 1]] = [@values[@length - x - 1], @values[x]]
+      [@indices[x], @indices[@length - x - 1]] = [@indices[@length - x - 1], @indices[x]]
 
   animationQueuePush: (dict) =>
     dict.swaps = @swaps
@@ -243,9 +240,8 @@ class VisualArray
     if i == j
       return
     @animationQueuePush(type: "swap", i: i, j: j)
-    tmp = @values[i]
-    @values[i] = @values[j]
-    @values[j] = tmp
+    [@values[i], @values[j]] = [@values[j], @values[i]]
+    [@indices[i], @indices[j]] = [@indices[j], @indices[i]]
 
   insert: (i, j) =>
     @inserts++
@@ -253,17 +249,12 @@ class VisualArray
     if i == j
       return
     @animationQueuePush(type: "insert", i: i, j: j)
-    tmp = @values[i]
-    k = i
     if i < j
-      while k < j
-        @values[k] = @values[k + 1]
-        k++
+      [@values[j], @values[i...j]] = [@values[i], @values[i+1..j]]
+      [@indices[j], @indices[i...j]] = [@indices[i], @indices[i+1..j]]
     else
-      while k > j
-        @values[k] = @values[k - 1]
-        k--
-    @values[j] = tmp
+      [@values[j], @values[j+1..i]] = [@values[i], @values[j...i]]
+      [@indices[j], @indices[j+1..i]] = [@indices[i], @indices[j...i]]
   
   eq: (i, j) =>
     @compares++
@@ -307,6 +298,7 @@ class VisualArray
   
   saveInitialState: =>
     @animationValues = @values.slice()
+    @animationIndices = @indices.slice()
     @locals = {}
     @swaps = 0
     @inserts = 0
@@ -327,6 +319,7 @@ class VisualArray
       @working = false
       @animationQueue = []
       @animationValues = @values.slice()
+      @animationIndices = @indices.slice()
       @redraw()
   
   playStep: =>
@@ -347,6 +340,7 @@ class VisualArray
       @working = false
       @animationQueue = []
       @values = @animationValues.slice()
+      @indices = @animationIndices.slice()
       @currentHighlight = []
       @redraw()
       return
@@ -356,9 +350,8 @@ class VisualArray
       @drawIndex(step.i)
       @drawIndex(step.j)
       setTimeout =>
-        tmp = @animationValues[step.i]
-        @animationValues[step.i] = @animationValues[step.j]
-        @animationValues[step.j] = tmp
+        [@animationValues[step.i], @animationValues[step.j]] = [@animationValues[step.j], @animationValues[step.i]]
+        [@animationIndices[step.i], @animationIndices[step.j]] = [@animationIndices[step.j], @animationIndices[step.i]]
         @redraw()
         @ctx.fillStyle = @colors.swap
         @drawIndex(step.i)
@@ -392,17 +385,12 @@ class VisualArray
       @ctx.fillStyle = @colors.insert
       @drawIndex(step.i)
       setTimeout =>
-        tmp = @animationValues[step.i]
-        k = step.i
         if step.i < step.j
-          while k < step.j
-            @animationValues[k] = @animationValues[k + 1]
-            k++
+          [@animationValues[step.j], @animationValues[step.i...step.j]] = [@animationValues[step.i], @animationValues[step.i+1..step.j]]
+          [@animationIndices[step.j], @animationIndices[step.i...step.j]] = [@animationIndices[step.i], @animationIndices[step.i+1..step.j]]
         else
-          while k > step.j
-            @animationValues[k] = @animationValues[k - 1]
-            k--
-        @animationValues[step.j] = tmp
+          [@animationValues[step.j], @animationValues[step.j+1..step.i]] = [@animationValues[step.i], @animationValues[step.j...step.i]]
+          [@animationIndices[step.j], @animationIndices[step.j+1..step.i]] = [@animationIndices[step.i], @animationIndices[step.j...step.i]]
         @redraw()
         @ctx.fillStyle = @colors.slide
         for x in slideRange
