@@ -72,7 +72,7 @@ quicksort = (left, right) ->
 
 quicksort(0, VA.length - 1)
   """
-  radix: """
+  msbradix: """
 sort = (begin, end, bit) ->
   VA.persistHighlight([begin..end])
   VA.locals.bit = bit
@@ -93,6 +93,21 @@ sort = (begin, end, bit) ->
     sort(i, end, bit - 1)
 
 sort(0, VA.length, 30)
+  """
+  lsbradix: """
+mask = 1
+loop
+  VA.locals.mask = mask
+  i = 0; end = VA.length
+  while i < end
+    if (VA.get(i) & mask)
+      VA.insert i, VA.length-1
+      end--
+    else
+      i++
+
+  mask *= 2
+  break if end == VA.length
   """
   merge: """
 mergesort = (lo, hi) ->
