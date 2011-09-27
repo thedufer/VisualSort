@@ -197,17 +197,52 @@ class VisualArray
   scale: (value) =>
     @height / @maxIndex * value
 
-  drawIndex: (index) =>
+  ###
+  # Draw the line at the specified index.
+  # @param {number} index the index to draw
+  # @param {boolean} markForRedraw false if it doesn't need a redraw next time.
+  ###
+  drawIndex: (index, markForRedraw = true) =>
+    @markedForRedraw.push index if markForRedraw
     @ctx.fillRect(2 * index * @barWidth, @height - @scale(@animationIndices[index]), @barWidth, @scale(@animationIndices[index]))
 
-  redraw: =>
-    @ctx.clearRect(0, 0, @pxWidth, @height)
+  ###
+  # Redraw a part of the canvas.
+  # @param {array[number]} range array of the indices to redraw. It must
+  #   represent a range.
+  ###
+  redrawParts: (range) ->
+    @ctx.clearRect(2 * _.first(range) * @barWidth, 0, 2 * range.length * @barWidth, @height)
     @ctx.fillStyle = @colors.normal
-    for index in [0...@length]
-      @drawIndex(index)
+    for index in range
+      @drawIndex(index, false)
+
+  ###
+  # Redraw the persistent highlight.
+  ###
+  redrawPersistentHighlight: ->
     @ctx.fillStyle = @colors.persistHighlight
     for index in @currentHighlight
-      @drawIndex(index)
+      @drawIndex(index, false)
+
+  ###
+  # Redraw the parts of the canvas which were recently colorized.
+  ###
+  redrawIfNeeded: ->
+    if @markedForRedraw.length
+      for range in @markedForRedraw
+        if !$.isArray range
+          range = [range]
+        @redrawParts range
+    @redrawPersistentHighlight()
+    @markedForRedraw = []
+
+  ###
+  # Redraw all of the canvas.
+  ###
+  redraw: =>
+    @redrawParts [0...@length]
+    @redrawPersistentHighlight()
 
   shuffle: =>
     # Fisher-Yates shuffle
@@ -300,6 +335,11 @@ class VisualArray
     @shifts = 0
     @compares = 0
     @currentHighlight = []
+    ###
+    # List of indices or ranges which has been modified/colorized during the
+    # current step. They will be redrawn on the next step.
+    ###
+    @markedForRedraw = []
 
   starting: =>
     @working = true
@@ -317,6 +357,10 @@ class VisualArray
       @animationIndices = @indices.slice()
       @redraw()
 
+  ###
+  # Placeholders to fill in with data/stats.
+  # They don't change, calculate them once.
+  ###
   domStats:
     swaps: $("#js-swaps")
     inserts: $("#js-inserts")
@@ -344,33 +388,36 @@ class VisualArray
       @values = @animationValues.slice()
       @indices = @animationIndices.slice()
       @currentHighlight = []
+      @markedForRedraw = []
       @redraw()
       return
     else if step.type == "swap"
-      @redraw()
+      @redrawIfNeeded()
       @ctx.fillStyle = @colors.swap
       @drawIndex(step.i)
       @drawIndex(step.j)
       setTimeout =>
         [@animationValues[step.i], @animationValues[step.j]] = [@animationValues[step.j], @animationValues[step.i]]
         [@animationIndices[step.i], @animationIndices[step.j]] = [@animationIndices[step.j], @animationIndices[step.i]]
-        @redraw()
+        @redrawIfNeeded()
         @ctx.fillStyle = @colors.swap
         @drawIndex(step.i)
         @drawIndex(step.j)
         setTimeout @play, @stepLength
       , @stepLength
     else if step.type == "highlight"
-      @redraw()
+      @redrawIfNeeded()
       @ctx.fillStyle = @colors.highlight
       for index in step.indices
         @drawIndex(index)
       setTimeout @play, if @quickHighlight then @stepLength / 10 else @stepLength
     else if step.type == "persistHighlight"
+      # mark previous highlighted items for redraw (to remove the highlight)
+      @markedForRedraw = _.uniq @markedForRedraw.concat @currentHighlight
       @currentHighlight = step.indices
       setTimeout @play, 0
     else if step.type == "compare"
-      @redraw()
+      @redrawIfNeeded()
       @ctx.fillStyle = @colors.compare
       @drawIndex(step.i)
       @drawIndex(step.j)
@@ -380,10 +427,11 @@ class VisualArray
         slideRange = [step.i..step.j]
       else
         slideRange = [step.j..step.i]
-      @redraw()
+      @redrawIfNeeded()
       @ctx.fillStyle = @colors.slide
       for x in slideRange
-        @drawIndex(x)
+        @drawIndex(x, false)
+      @markedForRedraw.push slideRange
       @ctx.fillStyle = @colors.insert
       @drawIndex(step.i)
       setTimeout =>
@@ -391,10 +439,11 @@ class VisualArray
         @animationValues.splice step.j, 0, tmp
         [tmp] = @animationIndices.splice step.i, 1
         @animationIndices.splice step.j, 0, tmp
-        @redraw()
+        @redrawIfNeeded()
         @ctx.fillStyle = @colors.slide
         for x in slideRange
-          @drawIndex(x)
+          @drawIndex(x, false)
+        @markedForRedraw.push slideRange
         @ctx.fillStyle = @colors.insert
         @drawIndex(step.j)
         setTimeout @play, @stepLength
