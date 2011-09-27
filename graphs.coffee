@@ -2,14 +2,17 @@ $("#js-stop").hide()
 
 sorts = {
   bubble: """
-VA.locals.swapped = true
-while VA.locals.swapped
-  VA.locals.swapped = false
-  for x in [0...VA.length - 1]
-    VA.locals.x = x
-    if VA.gt(x, x + 1)
-      VA.swap(x, x + 1)
-      VA.locals.swapped = true
+bubbleSort = ->
+  VA.locals.swapped = true
+  while VA.locals.swapped
+    VA.locals.swapped = false
+    for x in [0...VA.length - 1]
+      VA.locals.x = x
+      if VA.gt(x, x + 1)
+        VA.swap(x, x + 1)
+        VA.locals.swapped = true
+
+bubbleSort()
   """
   select: """
 for x in [0...VA.length - 1]
@@ -460,3 +463,5 @@ $("#js-quick-compare").click ->
 
 $(".js-show-sort").click (e) ->
   $("#js-code").val(sorts[e.currentTarget.id])
+
+$("#js-code").val(sorts.bubble)
