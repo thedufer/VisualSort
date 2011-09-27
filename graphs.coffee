@@ -37,6 +37,7 @@ slowsort = (left, right) ->
         VA.swap(x, y)
 
 quicksort = (left, right) ->
+  VA.persistHighlight([left..right])
   if right <= left
     return
   #left, right are inclusive
@@ -86,6 +87,46 @@ sort = (begin, end, bit) ->
 
 sort(0, VA.length, 30)
   """
+  merge: """
+mergesort = (lo, hi) ->
+  if lo==hi
+    return
+  if lo+1==hi
+    if VA.gt(lo,hi)
+      VA.swap(lo,hi)
+    return
+  mid=Math.floor(lo+(hi-lo)/2)
+  mergesort(lo,mid)
+  mergesort(mid+1,hi)
+  mid++
+  while lo<=mid && mid<=hi
+    if VA.gt(lo,mid)
+      VA.insert(mid, lo)
+      mid++
+    else
+      lo++
+mergesort(0,VA.length)
+  """
+  heap: """
+fix_heap = (y, size) ->
+  loop
+    y1 = 2*y+1
+    if y1 >= size then break
+    if y1 + 1 < size && VA.gt(y1 + 1, y1) 
+      y1++
+    if VA.lt(y, y1)
+      VA.swap(y, y1)
+      y = y1
+    else
+      break
+
+for x in [VA.length >> 1 ... -1] by -1
+  fix_heap(x, VA.length)
+
+for x in [VA.length-1 ... 0] by -1
+  VA.swap(x, 0)
+  fix_heap(0, x)
+  """
   clear: ""
 }
 
@@ -111,6 +152,7 @@ class VisualArray
       normal: "rgb(0,0,0)"
       swap: "rgb(255, 0, 0)"
       highlight: "rgb(0,255,0)"
+      persistHighlight: "rgb(0,127,0)"
       compare: "rgb(127,0,200)"
       insert: "rgb(0,0,255)"
       slide: "rgb(127,127,255)"
@@ -135,6 +177,9 @@ class VisualArray
     @ctx.clearRect(0, 0, @pxWidth, @height)
     @ctx.fillStyle = @colors.normal
     for index in [0...@length]
+      @drawIndex(index)
+    @ctx.fillStyle = @colors.persistHighlight
+    for index in @currentHighlight
       @drawIndex(index)
 
   shuffle: =>
@@ -198,6 +243,16 @@ class VisualArray
         k--
     @values[j] = tmp
   
+  eq: (i, j) =>
+    @compares++
+    @animationQueuePush(type: "compare", i: i, j: j)
+    @values[i] == @values[j]
+
+  neq: (i, j) =>
+    @compares++
+    @animationQueuePush(type: "compare", i: i, j: j)
+    @values[i] != @values[j]
+
   lt: (i, j) =>
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
@@ -222,6 +277,11 @@ class VisualArray
     if !$.isArray indices
       indices = [indices]
     @animationQueue.push(type: "highlight", indices: indices)
+
+  persistHighlight: (indices) =>
+    if !$.isArray indices
+      indices = [indices]
+    @animationQueue.push(type: "persistHighlight", indices: indices)
   
   saveInitialState: =>
     @animationValues = @values.slice()
@@ -230,6 +290,7 @@ class VisualArray
     @inserts = 0
     @shifts = 0
     @compares = 0
+    @currentHighlight = []
 
   starting: =>
     @working = true
@@ -264,6 +325,7 @@ class VisualArray
       @working = false
       @animationQueue = []
       @values = @animationValues.slice()
+      @currentHighlight = []
       @redraw()
       return
     else if step.type == "swap"
@@ -287,6 +349,9 @@ class VisualArray
       for index in step.indices
         @drawIndex(index)
       setTimeout @play, if @quickHighlight then @stepLength / 10 else @stepLength
+    else if step.type == "persistHighlight"
+      @currentHighlight = step.indices
+      setTimeout @play, 0
     else if step.type == "compare"
       @redraw()
       @ctx.fillStyle = @colors.compare

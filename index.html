@@ -55,6 +55,8 @@
       <button type="button" class="js-show-sort" id="insert">Insertion</button>
       <button type="button" class="js-show-sort" id="quick">Quick</button>
       <button type="button" class="js-show-sort" id="radix">Radix</button>
+      <button type="button" class="js-show-sort" id="merge">Merge</button>
+      <button type="button" class="js-show-sort" id="heap">Heap</button>
       <div id="description-wrapper">
         <div id="description">
           Write some code in <a href="http://jashkenas.github.com/coffee-script/">CoffeeScript</a> and hit run.  The array will show what's going on.
@@ -70,8 +72,12 @@
             <li><span class="code">lte(i, j)</span>: Return the result of <span class="code">VA.get(i) <= VA.get(j)</span>.</li>
             <li><span class="code">gt(i, j)</span>: Return the result of <span class="code">VA.get(i) > VA.get(j)</span>.</li>
             <li><span class="code">gte(i, j)</span>: Return the result of <span class="code">VA.get(i) >= VA.get(j)</span>.</li>
+            <li><span class="code">eq(i, j)</span>: Return the result of <span class="code">VA.get(i) == VA.get(j)</span>.</li>
+            <li><span class="code">neq(i, j)</span>: Return the result of <span class="code">VA.get(i) != VA.get(j)</span>.</li>
             <li><span class="code">highlight(i)</span>: Highlight the i<sup>th</sup> element.</li>
             <li><span class="code">highlight([i<sub>1</sub>, i<sub>2</sub>...i<sub>n</sub>])</span>: Highlight the i<sub>1</sub><sup>th</sup>, i<sub>2</sub><sup>th</sup>... i<sub>n</sub><sup>th</sup> elements.</li>
+            <li><span class="code">persistHighlight(i)</span>: Highlight the i<sup>th</sup> element until the next <span class="code">persistHighlight</span> call.</li>
+            <li><span class="code">persistHighlight([i<sub>1</sub>, i<sub>2</sub>...i<sub>n</sub>])</span>: Highlight the i<sub>1</sub><sup>th</sup>, i<sub>2</sub><sup>th</sup>... i<sub>n</sub><sup>th</sup> elements until the next <span class="code">persistHighlight</span> call.</li>
             <li><span class="code">locals</span>: A map (initially empty) where you can store primitives that you want to see as the sort animates.  See bubble sort for an example.</li>
           </ul>
           <br />
