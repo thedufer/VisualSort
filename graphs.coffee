@@ -72,6 +72,8 @@ quicksort(0, VA.length - 1)
   """
   radix: """
 sort = (begin, end, bit) ->
+  VA.persistHighlight([begin..end])
+  VA.locals.bit = bit
   i = begin
   j = end
   mask = 1 << bit
