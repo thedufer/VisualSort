@@ -279,12 +279,12 @@ class VisualArray
   highlight: (indices) =>
     if !$.isArray indices
       indices = [indices]
-    @animationQueue.push(type: "highlight", indices: indices)
+    @animationQueuePush(type: "highlight", indices: indices)
 
   persistHighlight: (indices) =>
     if !$.isArray indices
       indices = [indices]
-    @animationQueue.push(type: "persistHighlight", indices: indices)
+    @animationQueuePush(type: "persistHighlight", indices: indices)
   
   saveInitialState: =>
     @animationValues = @values.slice()
