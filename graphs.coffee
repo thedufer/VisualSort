@@ -316,18 +316,25 @@ class VisualArray
       @animationValues = @values.slice()
       @animationIndices = @indices.slice()
       @redraw()
-  
+
+  domStats:
+    swaps: $("#js-swaps")
+    inserts: $("#js-inserts")
+    shifts: $("#js-shifts")
+    compares: $("#js-compares")
+    result: $("#js-result")
+
   playStep: =>
     step = @animationQueue.shift()
     if step?
-      $("#js-swaps").html(step.swaps)
-      $("#js-inserts").html(step.inserts)
-      $("#js-shifts").html(if step.inserts then Math.floor(step.shifts / step.inserts) else 0)
-      $("#js-compares").html(step.compares)
+      @domStats.swaps.html(step.swaps)
+      @domStats.inserts.html(step.inserts)
+      @domStats.shifts.html(if step.inserts then Math.floor(step.shifts / step.inserts) else 0)
+      @domStats.compares.html(step.compares)
       localsString = ""
       for k, v of step.locals
         localsString += "#{k}: #{v}<br />"
-      $("#js-result").html(localsString)
+      @domStats.result.html(localsString)
     if !step? || @stop
       $("#js-stop").hide()
       $("#js-run").show()
