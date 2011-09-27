@@ -4,9 +4,11 @@ sorts = {
   bubble: """
 bubbleSort = ->
   VA.locals.swapped = true
+  VA.locals.y = VA.length
   while VA.locals.swapped
+    VA.locals.y--
     VA.locals.swapped = false
-    for x in [0...VA.length - 1]
+    for x in [0...VA.locals.y]
       VA.locals.x = x
       if VA.gt(x, x + 1)
         VA.swap(x, x + 1)
