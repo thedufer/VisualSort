@@ -54,7 +54,7 @@ quicksort = (left, right) ->
   leftMove = left + 1
   rightMove = right
   while leftMove < rightMove
-    if VA.lt(leftMove, pivot)
+    if VA.lte(leftMove, pivot)
       leftMove++
     else if VA.gt(rightMove, pivot)
       rightMove--
