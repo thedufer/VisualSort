@@ -95,9 +95,10 @@ sort = (begin, end, bit) ->
 sort(0, VA.length, 30)
   """
   lsbradix: """
-mask = 1
+bit = 0
 loop
-  VA.locals.mask = mask
+  VA.locals.bit = bit
+  mask = 1 << bit
   i = 0; end = VA.length
   while i < end
     if (VA.get(i) & mask)
@@ -106,7 +107,7 @@ loop
     else
       i++
 
-  mask *= 2
+  bit++
   break if end == VA.length
   """
   merge: """
