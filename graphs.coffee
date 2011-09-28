@@ -197,17 +197,52 @@ class VisualArray
   scale: (value) =>
     @height / @maxIndex * value
 
-  drawIndex: (index) =>
+  ###
+  # Draw the line at the specified index.
+  # @param {number} index the index to draw
+  # @param {boolean} markForRedraw false if it doesn't need a redraw next time.
+  ###
+  drawIndex: (index, markForRedraw = true) =>
+    @markedForRedraw.push index if markForRedraw
     @ctx.fillRect(2 * index * @barWidth, @height - @scale(@animationIndices[index]), @barWidth, @scale(@animationIndices[index]))
 
-  redraw: =>
-    @ctx.clearRect(0, 0, @pxWidth, @height)
+  ###
+  # Redraw a part of the canvas.
+  # @param {array[number]} range array of the indices to redraw. It must
+  #   represent a range.
+  ###
+  redrawParts: (range) ->
+    @ctx.clearRect(2 * _.first(range) * @barWidth, 0, 2 * range.length * @barWidth, @height)
     @ctx.fillStyle = @colors.normal
-    for index in [0...@length]
-      @drawIndex(index)
+    for index in range
+      @drawIndex(index, false)
+
+  ###
+  # Redraw the persistent highlight.
+  ###
+  redrawPersistentHighlight: ->
     @ctx.fillStyle = @colors.persistHighlight
     for index in @currentHighlight
-      @drawIndex(index)
+      @drawIndex(index, false)
+
+  ###
+  # Redraw the parts of the canvas which were recently colorized.
+  ###
+  redrawIfNeeded: ->
+    if @markedForRedraw.length
+      for range in @markedForRedraw
+        if !$.isArray range
+          range = [range]
+        @redrawParts range
+    @redrawPersistentHighlight()
+    @markedForRedraw = []
+
+  ###
+  # Redraw all of the canvas.
+  ###
+  redraw: =>
+    @redrawParts [0...@length]
+    @redrawPersistentHighlight()
 
   shuffle: =>
     # Fisher-Yates shuffle
@@ -217,16 +252,12 @@ class VisualArray
       [@indices[i], @indices[j]] = [@indices[j], @indices[i]]
 
   sort: =>
-    for x in [0...@length]
-      for y in [x + 1...@length]
-        if @values[x] > @values[y]
-          [@values[x], @values[y]] = [@values[y], @values[x]]
-          [@indices[x], @indices[y]] = [@indices[y], @indices[x]]
+    @values.sort (a, b) => a - b
+    @indices.sort (a, b) => a - b
 
   reverse: =>
-    for x in [0...@length / 2]
-      [@values[x], @values[@length - x - 1]] = [@values[@length - x - 1], @values[x]]
-      [@indices[x], @indices[@length - x - 1]] = [@indices[@length - x - 1], @indices[x]]
+    @values.reverse()
+    @indices.reverse()
 
   animationQueuePush: (dict) =>
     dict.swaps = @swaps
@@ -250,12 +281,10 @@ class VisualArray
     if i == j
       return
     @animationQueuePush(type: "insert", i: i, j: j)
-    if i < j
-      [@values[j], @values[i...j]] = [@values[i], @values[i+1..j]]
-      [@indices[j], @indices[i...j]] = [@indices[i], @indices[i+1..j]]
-    else
-      [@values[j], @values[j+1..i]] = [@values[i], @values[j...i]]
-      [@indices[j], @indices[j+1..i]] = [@indices[i], @indices[j...i]]
+    [tmp] = @values.splice i, 1
+    @values.splice j, 0, tmp
+    [tmp] = @indices.splice i, 1
+    @indices.splice j, 0, tmp
   
   eq: (i, j) =>
     @compares++
@@ -306,6 +335,11 @@ class VisualArray
     @shifts = 0
     @compares = 0
     @currentHighlight = []
+    ###
+    # List of indices or ranges which has been modified/colorized during the
+    # current step. They will be redrawn on the next step.
+    ###
+    @markedForRedraw = []
 
   starting: =>
     @working = true
@@ -322,18 +356,29 @@ class VisualArray
       @animationValues = @values.slice()
       @animationIndices = @indices.slice()
       @redraw()
-  
+
+  ###
+  # Placeholders to fill in with data/stats.
+  # They don't change, calculate them once.
+  ###
+  domStats:
+    swaps: $("#js-swaps")
+    inserts: $("#js-inserts")
+    shifts: $("#js-shifts")
+    compares: $("#js-compares")
+    result: $("#js-result")
+
   playStep: =>
     step = @animationQueue.shift()
     if step?
-      $("#js-swaps").html(step.swaps)
-      $("#js-inserts").html(step.inserts)
-      $("#js-shifts").html(if step.inserts then Math.floor(step.shifts / step.inserts) else 0)
-      $("#js-compares").html(step.compares)
+      @domStats.swaps.html(step.swaps)
+      @domStats.inserts.html(step.inserts)
+      @domStats.shifts.html(if step.inserts then Math.floor(step.shifts / step.inserts) else 0)
+      @domStats.compares.html(step.compares)
       localsString = ""
       for k, v of step.locals
         localsString += "#{k}: #{v}<br />"
-      $("#js-result").html(localsString)
+      @domStats.result.html(localsString)
     if !step? || @stop
       $("#js-stop").hide()
       $("#js-run").show()
@@ -343,33 +388,36 @@ class VisualArray
       @values = @animationValues.slice()
       @indices = @animationIndices.slice()
       @currentHighlight = []
+      @markedForRedraw = []
       @redraw()
       return
     else if step.type == "swap"
-      @redraw()
+      @redrawIfNeeded()
       @ctx.fillStyle = @colors.swap
       @drawIndex(step.i)
       @drawIndex(step.j)
       setTimeout =>
         [@animationValues[step.i], @animationValues[step.j]] = [@animationValues[step.j], @animationValues[step.i]]
         [@animationIndices[step.i], @animationIndices[step.j]] = [@animationIndices[step.j], @animationIndices[step.i]]
-        @redraw()
+        @redrawIfNeeded()
         @ctx.fillStyle = @colors.swap
         @drawIndex(step.i)
         @drawIndex(step.j)
         setTimeout @play, @stepLength
       , @stepLength
     else if step.type == "highlight"
-      @redraw()
+      @redrawIfNeeded()
       @ctx.fillStyle = @colors.highlight
       for index in step.indices
         @drawIndex(index)
       setTimeout @play, if @quickHighlight then @stepLength / 10 else @stepLength
     else if step.type == "persistHighlight"
+      # mark previous highlighted items for redraw (to remove the highlight)
+      @markedForRedraw = _.uniq @markedForRedraw.concat @currentHighlight
       @currentHighlight = step.indices
       setTimeout @play, 0
     else if step.type == "compare"
-      @redraw()
+      @redrawIfNeeded()
       @ctx.fillStyle = @colors.compare
       @drawIndex(step.i)
       @drawIndex(step.j)
@@ -379,23 +427,23 @@ class VisualArray
         slideRange = [step.i..step.j]
       else
         slideRange = [step.j..step.i]
-      @redraw()
+      @redrawIfNeeded()
       @ctx.fillStyle = @colors.slide
       for x in slideRange
-        @drawIndex(x)
+        @drawIndex(x, false)
+      @markedForRedraw.push slideRange
       @ctx.fillStyle = @colors.insert
       @drawIndex(step.i)
       setTimeout =>
-        if step.i < step.j
-          [@animationValues[step.j], @animationValues[step.i...step.j]] = [@animationValues[step.i], @animationValues[step.i+1..step.j]]
-          [@animationIndices[step.j], @animationIndices[step.i...step.j]] = [@animationIndices[step.i], @animationIndices[step.i+1..step.j]]
-        else
-          [@animationValues[step.j], @animationValues[step.j+1..step.i]] = [@animationValues[step.i], @animationValues[step.j...step.i]]
-          [@animationIndices[step.j], @animationIndices[step.j+1..step.i]] = [@animationIndices[step.i], @animationIndices[step.j...step.i]]
-        @redraw()
+        [tmp] = @animationValues.splice step.i, 1
+        @animationValues.splice step.j, 0, tmp
+        [tmp] = @animationIndices.splice step.i, 1
+        @animationIndices.splice step.j, 0, tmp
+        @redrawIfNeeded()
         @ctx.fillStyle = @colors.slide
         for x in slideRange
-          @drawIndex(x)
+          @drawIndex(x, false)
+        @markedForRedraw.push slideRange
         @ctx.fillStyle = @colors.insert
         @drawIndex(step.j)
         setTimeout @play, @stepLength
@@ -456,17 +504,11 @@ $("#js-speed").change ->
   return
 
 $("#js-quick-highlight").click ->
-  if $("#js-quick-highlight").is(":checked")
-    VA.quickHighlight = true
-  else
-    VA.quickHighlight = false
+  VA.quickHighlight = $("#js-quick-highlight").is(":checked")
   return
 
 $("#js-quick-compare").click ->
-  if $("#js-quick-compare").is(":checked")
-    VA.quickCompare = true
-  else
-    VA.quickCompare = false
+  VA.quickCompare = $("#js-quick-compare").is(":checked")
   return
 
 $(".js-show-sort").click (e) ->
