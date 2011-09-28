@@ -217,16 +217,12 @@ class VisualArray
       [@indices[i], @indices[j]] = [@indices[j], @indices[i]]
 
   sort: =>
-    for x in [0...@length]
-      for y in [x + 1...@length]
-        if @values[x] > @values[y]
-          [@values[x], @values[y]] = [@values[y], @values[x]]
-          [@indices[x], @indices[y]] = [@indices[y], @indices[x]]
+    @values.sort (a, b) => a - b
+    @indices.sort (a, b) => a - b
 
   reverse: =>
-    for x in [0...@length / 2]
-      [@values[x], @values[@length - x - 1]] = [@values[@length - x - 1], @values[x]]
-      [@indices[x], @indices[@length - x - 1]] = [@indices[@length - x - 1], @indices[x]]
+    @values.reverse()
+    @indices.reverse()
 
   animationQueuePush: (dict) =>
     dict.swaps = @swaps
@@ -250,12 +246,10 @@ class VisualArray
     if i == j
       return
     @animationQueuePush(type: "insert", i: i, j: j)
-    if i < j
-      [@values[j], @values[i...j]] = [@values[i], @values[i+1..j]]
-      [@indices[j], @indices[i...j]] = [@indices[i], @indices[i+1..j]]
-    else
-      [@values[j], @values[j+1..i]] = [@values[i], @values[j...i]]
-      [@indices[j], @indices[j+1..i]] = [@indices[i], @indices[j...i]]
+    [tmp] = @values.splice i, 1
+    @values.splice j, 0, tmp
+    [tmp] = @indices.splice i, 1
+    @indices.splice j, 0, tmp
   
   eq: (i, j) =>
     @compares++
@@ -386,12 +380,10 @@ class VisualArray
       @ctx.fillStyle = @colors.insert
       @drawIndex(step.i)
       setTimeout =>
-        if step.i < step.j
-          [@animationValues[step.j], @animationValues[step.i...step.j]] = [@animationValues[step.i], @animationValues[step.i+1..step.j]]
-          [@animationIndices[step.j], @animationIndices[step.i...step.j]] = [@animationIndices[step.i], @animationIndices[step.i+1..step.j]]
-        else
-          [@animationValues[step.j], @animationValues[step.j+1..step.i]] = [@animationValues[step.i], @animationValues[step.j...step.i]]
-          [@animationIndices[step.j], @animationIndices[step.j+1..step.i]] = [@animationIndices[step.i], @animationIndices[step.j...step.i]]
+        [tmp] = @animationValues.splice step.i, 1
+        @animationValues.splice step.j, 0, tmp
+        [tmp] = @animationIndices.splice step.i, 1
+        @animationIndices.splice step.j, 0, tmp
         @redraw()
         @ctx.fillStyle = @colors.slide
         for x in slideRange
@@ -456,17 +448,11 @@ $("#js-speed").change ->
   return
 
 $("#js-quick-highlight").click ->
-  if $("#js-quick-highlight").is(":checked")
-    VA.quickHighlight = true
-  else
-    VA.quickHighlight = false
+  VA.quickHighlight = $("#js-quick-highlight").is(":checked")
   return
 
 $("#js-quick-compare").click ->
-  if $("#js-quick-compare").is(":checked")
-    VA.quickCompare = true
-  else
-    VA.quickCompare = false
+  VA.quickCompare = $("#js-quick-compare").is(":checked")
   return
 
 $(".js-show-sort").click (e) ->
