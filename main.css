@@ -54,6 +54,11 @@ ul {
   float:left;
 }
 
+#js-error{
+  display: none;
+  background: #f98;
+  padding: 10px 0;
+}
 #right-bar{
   width:200px;
   float:right;

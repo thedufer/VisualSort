@@ -37,14 +37,14 @@ for x in [1...VA.length]
 slowsort = (left, right) ->
   #left, right are inclusive
   for x in [left..right]
-    for y in [x + 1..right]
+    for y in [x + 1..right] by 1
       if VA.gt(x, y)
         VA.swap(x, y)
 
 quicksort = (left, right) ->
-  VA.persistHighlight([left..right])
   if right <= left
     return
+  VA.persistHighlight([left..right])
   #left, right are inclusive
   #pivot is the left-most value
   if right - left < 5
@@ -74,7 +74,7 @@ quicksort(0, VA.length - 1)
   """
   msbradix: """
 sort = (begin, end, bit) ->
-  VA.persistHighlight([begin..end])
+  VA.persistHighlight([begin...end])
   VA.locals.bit = bit
   i = begin
   j = end
@@ -128,14 +128,14 @@ mergesort = (lo, hi) ->
       mid++
     else
       lo++
-mergesort(0,VA.length)
+mergesort(0,VA.length - 1)
   """
   heap: """
 fix_heap = (y, size) ->
   loop
     y1 = 2*y+1
     if y1 >= size then break
-    if y1 + 1 < size && VA.gt(y1 + 1, y1) 
+    if y1 + 1 < size && VA.gt(y1 + 1, y1)
       y1++
     if VA.lt(y, y1)
       VA.swap(y, y1)
@@ -267,7 +267,18 @@ class VisualArray
     dict.locals = _.extend {}, @locals
     @animationQueue.push dict
 
+  ###
+  # Check that the specified indices are in the range of the @values indices.
+  # @param {string} methodName The name of the method, for a useful error.
+  # @param {array[integer]} indices The list of indices to check.
+  # @throws {Error} if an indice was out of range.
+  ###
+  checkIndexes: (methodName, indices) ->
+    for indice, i in indices
+      throw new Error("#{methodName}, argument #{i+1} : #{indice} is not a valid index") if not (0 <= indice < @values.length)
+
   swap: (i, j) =>
+    @checkIndexes("swap", [i, j])
     @swaps++
     if i == j
       return
@@ -276,6 +287,7 @@ class VisualArray
     [@indices[i], @indices[j]] = [@indices[j], @indices[i]]
 
   insert: (i, j) =>
+    @checkIndexes("insert", [i, j])
     @inserts++
     @shifts += Math.abs(j - i)
     if i == j
@@ -285,33 +297,39 @@ class VisualArray
     @values.splice j, 0, tmp
     [tmp] = @indices.splice i, 1
     @indices.splice j, 0, tmp
-  
+
   eq: (i, j) =>
+    @checkIndexes("eq", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
     @values[i] == @values[j]
 
   neq: (i, j) =>
+    @checkIndexes("neq", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
     @values[i] != @values[j]
 
   lt: (i, j) =>
+    @checkIndexes("lt", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
     @values[i] < @values[j]
 
   gt: (i, j) =>
+    @checkIndexes("gt", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
     @values[i] > @values[j]
 
   lte: (i, j) =>
+    @checkIndexes("lte", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
     @values[i] <= @values[j]
 
   gte: (i, j) =>
+    @checkIndexes("gte", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
     @values[i] >= @values[j]
@@ -319,13 +337,15 @@ class VisualArray
   highlight: (indices) =>
     if !$.isArray indices
       indices = [indices]
+    @checkIndexes("highlight", indices)
     @animationQueuePush(type: "highlight", indices: indices)
 
   persistHighlight: (indices) =>
     if !$.isArray indices
       indices = [indices]
+    @checkIndexes("persistHighlight", indices)
     @animationQueuePush(type: "persistHighlight", indices: indices)
-  
+
   saveInitialState: =>
     @animationValues = @values.slice()
     @animationIndices = @indices.slice()
@@ -458,7 +478,7 @@ VA.saveInitialState()
 VA.redraw()
 
 evaluate = (code) ->
-  $("#js-error").html("")
+  $("#js-error").html("").hide()
   if VA.working
     return
   VA.saveInitialState()
@@ -466,7 +486,7 @@ evaluate = (code) ->
   try
     CoffeeScript.eval(code)
   catch error
-    $("#js-error").html(error.message + "<br /><br />")
+    $("#js-error").html(error.message).show()
   VA.play()
 
 $("#js-run").click ->
