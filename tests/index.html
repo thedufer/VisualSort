@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>VisuSort Test Suite</title>
+    <link rel="stylesheet" href="qunit.css" type="text/css" media="screen">
+    <script type="text/javascript" src="../jquery-1.6.4.js"></script>
+    <script type="text/javascript" src="../underscore-min.js"></script>
+    <script type="text/javascript" src="qunit.js"></script>
+    <!-- Prevent auto-start to make it work in combination with Coffee. -->
+    <script>QUnit.config.autostart = false;</script>
+    <script type="text/javascript" src="../coffee-script.js"></script>
+    <script type="text/coffeescript" src="../VisualArray.coffee"></script>
+    <script type="text/coffeescript" src="graphs.coffee"></script>
+    <script type="text/coffeescript">
+      QUnit.start()
+    </script>
+  </head>
+  <body>
+    <!--qunit ui-->
+    <h1 id="qunit-header">VisuSort Test Suite</h1>
+    <h2 id="qunit-banner"></h2>
+    <div id="qunit-testrunner-toolbar"></div>
+    <h2 id="qunit-userAgent"></h2>
+    <ol id="qunit-tests"></ol>
+    <div id="qunit-fixture"></div>
+
+    <!--test data-->
+    <canvas id="js-canvas" width="800" height="200"></canvas>
+  </body>
+</html>
