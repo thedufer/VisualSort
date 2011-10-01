@@ -44,9 +44,12 @@ ul {
   padding-bottom:50px;
 }
 
-#js-code{
+#js-code, #js-custom-values{
   width:100%;
   resize:vertical;
+}
+#custom-values{
+  display:none;
 }
 
 #main{
@@ -71,4 +74,16 @@ ul {
 
 .code{
   font-family:Monaco, Consolas, "Lucida Console", monospace;
+}
+
+#more-options{
+  display:none;
+}
+#show-more-options{
+  float:right;
+  cursor: pointer;
+}
+
+.code-example code{
+  border: 1px solid #BBB !important;
 }

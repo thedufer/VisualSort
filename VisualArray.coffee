@@ -1,3 +1,24 @@
+###
+# Represent an element in the to-be-sorted array.
+# It has two attributes :
+# - value : the value of the element. It's a float.
+# - norm  : an integer representing the distance from the lowest value in the array.
+###
+class Element
+  constructor: (value, norm) ->
+    if value?
+      value = parseFloat value
+      throw new Error("#{value} is not a float") if isNaN value
+      @value = value
+
+    if norm?
+      norm = parseFloat norm
+      throw new Error("#{norm} is not a float") if isNaN norm
+      @norm = norm
+
+  toString: ->
+    "{value:#{@value}, norm:#{@norm}}"
+
 class VisualArray
   constructor: (@canvas) ->
     @ctx = canvas.getContext('2d')
@@ -12,6 +33,18 @@ class VisualArray
     @stop = false
     @quickHighlight = true
     @quickCompare = true
+    ###
+    # Use a convenient norm to draw the bars. When the array is sorted, each
+    # bar is at 0 or 1 from the next/previous bar.
+    # Without, the natural norm is used.
+    ###
+    @normalizeBars = true
+    ###
+    # When the bars aren't normalized, show the level 0 even if is far from the
+    # current values.
+    # If false, center the canvas on min - max.
+    ###
+    @alwaysShowLevelZero = false
     @colors = {
       normal: "rgb(0,0,0)"
       swap: "rgb(255, 0, 0)"
@@ -22,20 +55,83 @@ class VisualArray
       slide: "rgb(127,127,255)"
     }
 
-  setLength: (length) =>
+  ###
+  # Generate and set an array of random values of the specified length.
+  # If the length is out the min/max, it will be automatically changed.
+  # @param {integer} length The length of the array.
+  ###
+  generateValues: (length) =>
     if @working
       return
-    @length = Math.max @minLength, Math.min @maxLength, length
-    @values = (Math.floor(Math.random() * @maxRandom) for x in [1..@length]).sort((a,b)->a-b)
-    lastVal = null
-    @maxIndex = 1
-    @indices = _.map(@values, ((a) -> ++@maxIndex if a != lastVal; lastVal = a; @maxIndex), this)
-    @barWidth = 1
-    while @pxWidth / @barWidth / 2 > @length
-      @barWidth++
+    length = Math.max @minLength, Math.min @maxLength, length
+    @setValues (Math.floor(Math.random() * @maxRandom) for x in [1..length])
 
+  ###
+  # Set the values to sort, and calculate the norm of the elements.
+  # @param {array[number]} values The new list of values.
+  # @throws {Error} If an item in the array is not a number.
+  # @throws {Error} If the array is too short or too long.
+  ###
+  setValues: (values) ->
+    if @working
+      return
+    if !(@minLength <= values.length <= @maxLength)
+      throw new Error("there must be between #{@minLength} and #{@maxLength} items, not #{values.length}")
+    @values = (new Element(value) for value in values)
+    @length = @values.length
+    # sort a new array, leaving the array "values" in the same order
+    sortedValues = @values.slice().sort((a, b) -> a.value - b.value)
+    lastVal = null
+    @maxNorm = 0
+    @minValue = _.first(sortedValues).value
+    @maxValue = _.last(sortedValues).value
+    for a in sortedValues
+      ++@maxNorm if a.value != lastVal
+      lastVal = a.value
+      a.norm = @maxNorm
+    @barWidth = (Math.floor @pxWidth / @length / 2) or 1
+
+  ###
+  # Determine how to fit the value in the canvas.
+  # @param {number} value The value to fit in.
+  # @returns {object} How to place the bar :
+  #   - y : the offset to use from the top
+  #   - length : the length of the bar
+  ###
   scale: (value) =>
-    @height / @maxIndex * value
+    if @normalizeBars
+      # this is the same algorithm as the not-normalized branch, but with two
+      # properties : minNorm == 0 and maxNorm > 0, which greatly simplify
+      # the operations.
+      barLength = @height * value.norm / @maxNorm
+      y = @height - barLength
+    else
+      graphMinValue = if @alwaysShowLevelZero then Math.min(@minValue, 0) else @minValue
+      graphMaxValue = if @alwaysShowLevelZero then Math.max(@maxValue, 0) else @maxValue
+      if graphMinValue is graphMaxValue
+        # don't divide by 0 ! The universe might collapse.
+        # Arbitrary value : display the line on top
+        barLength = @height
+        y = 0
+      else # universe is safe
+        if 0 <= graphMinValue
+          zeroLevel = graphMinValue
+        else if graphMinValue < 0 < graphMaxValue
+          zeroLevel = 0
+        else if graphMaxValue <= 0
+          zeroLevel = graphMaxValue
+        # from = @height * (graphMaxValue - zeroLevel) / (graphMaxValue - graphMinValue)
+        # to = @height * (graphMaxValue - value.value) / (graphMaxValue - graphMinValue)
+        ratio = @height / (graphMaxValue - graphMinValue)
+        barLength = Math.abs(zeroLevel - value.value) * ratio
+        y = (graphMaxValue - Math.max(value.value, zeroLevel)) * ratio
+
+    # cheat to display bars without length
+    if barLength is 0
+      y-- if y > 0
+      barLength++
+
+    {y: y, barLength: barLength}
 
   ###
   # Draw the line at the specified index.
@@ -44,8 +140,14 @@ class VisualArray
   ###
   drawIndex: (index, markForRedraw = true) =>
     @markedForRedraw.push index if markForRedraw
-    @ctx.fillRect(2 * index * @barWidth, @height - @scale(@animationIndices[index]), @barWidth, @scale(@animationIndices[index]))
+    bar = @scale @animationValues[index]
+    @ctx.fillRect(2 * index * @barWidth, bar.y, @barWidth, bar.barLength)
 
+  ###
+  # Completely clear the canvas.
+  ###
+  clearContext: ->
+    @ctx.clearRect 0, 0, @pxWidth, @height
   ###
   # Redraw a part of the canvas.
   # @param {array[number]} range array of the indices to redraw. It must
@@ -78,9 +180,19 @@ class VisualArray
     @markedForRedraw = []
 
   ###
+  # Redraw everything at an appropriate time.
+  ###
+  scheduleFullRedraw: ->
+    if @working
+      @markedForRedraw = [0...VA.length]
+    else
+      @redraw()
+
+  ###
   # Redraw all of the canvas.
   ###
   redraw: =>
+    @clearContext()
     @redrawParts [0...@length]
     @redrawPersistentHighlight()
 
@@ -89,15 +201,12 @@ class VisualArray
     for i in [@length-1..1]
       j = Math.floor(Math.random() * (i+1))
       [@values[i], @values[j]] = [@values[j], @values[i]]
-      [@indices[i], @indices[j]] = [@indices[j], @indices[i]]
 
   sort: =>
-    @values.sort (a, b) => a - b
-    @indices.sort (a, b) => a - b
+    @values.sort (a, b) => a.value - b.value
 
   reverse: =>
     @values.reverse()
-    @indices.reverse()
 
   animationQueuePush: (dict) =>
     dict.swaps = @swaps
@@ -124,7 +233,6 @@ class VisualArray
       return
     @animationQueuePush(type: "swap", i: i, j: j)
     [@values[i], @values[j]] = [@values[j], @values[i]]
-    [@indices[i], @indices[j]] = [@indices[j], @indices[i]]
 
   insert: (i, j) =>
     @checkIndexes("insert", [i, j])
@@ -135,44 +243,42 @@ class VisualArray
     @animationQueuePush(type: "insert", i: i, j: j)
     [tmp] = @values.splice i, 1
     @values.splice j, 0, tmp
-    [tmp] = @indices.splice i, 1
-    @indices.splice j, 0, tmp
 
   eq: (i, j) =>
     @checkIndexes("eq", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
-    @values[i] == @values[j]
+    @values[i].value == @values[j].value
 
   neq: (i, j) =>
     @checkIndexes("neq", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
-    @values[i] != @values[j]
+    @values[i].value != @values[j].value
 
   lt: (i, j) =>
     @checkIndexes("lt", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
-    @values[i] < @values[j]
+    @values[i].value < @values[j].value
 
   gt: (i, j) =>
     @checkIndexes("gt", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
-    @values[i] > @values[j]
+    @values[i].value > @values[j].value
 
   lte: (i, j) =>
     @checkIndexes("lte", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
-    @values[i] <= @values[j]
+    @values[i].value <= @values[j].value
 
   gte: (i, j) =>
     @checkIndexes("gte", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
-    @values[i] >= @values[j]
+    @values[i].value >= @values[j].value
 
   highlight: (indices) =>
     if !$.isArray indices
@@ -188,7 +294,6 @@ class VisualArray
 
   saveInitialState: =>
     @animationValues = @values.slice()
-    @animationIndices = @indices.slice()
     @locals = {}
     @swaps = 0
     @inserts = 0
@@ -205,7 +310,7 @@ class VisualArray
     @working = true
 
   get: (index) =>
-    @values[index]
+    @values[index].value
 
   play: =>
     if @stepLength > 0
@@ -214,7 +319,6 @@ class VisualArray
       @working = false
       @animationQueue = []
       @animationValues = @values.slice()
-      @animationIndices = @indices.slice()
       @redraw()
 
   ###
@@ -246,7 +350,6 @@ class VisualArray
       @working = false
       @animationQueue = []
       @values = @animationValues.slice()
-      @indices = @animationIndices.slice()
       @currentHighlight = []
       @markedForRedraw = []
       @redraw()
@@ -258,7 +361,6 @@ class VisualArray
       @drawIndex(step.j)
       setTimeout =>
         [@animationValues[step.i], @animationValues[step.j]] = [@animationValues[step.j], @animationValues[step.i]]
-        [@animationIndices[step.i], @animationIndices[step.j]] = [@animationIndices[step.j], @animationIndices[step.i]]
         @redrawIfNeeded()
         @ctx.fillStyle = @colors.swap
         @drawIndex(step.i)
@@ -297,8 +399,6 @@ class VisualArray
       setTimeout =>
         [tmp] = @animationValues.splice step.i, 1
         @animationValues.splice step.j, 0, tmp
-        [tmp] = @animationIndices.splice step.i, 1
-        @animationIndices.splice step.j, 0, tmp
         @redrawIfNeeded()
         @ctx.fillStyle = @colors.slide
         for x in slideRange

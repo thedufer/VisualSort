@@ -159,7 +159,7 @@ sleep = (ms) ->
     0
 
 window.VA = new VisualArray $("#js-canvas")[0]
-VA.setLength(100)
+VA.generateValues(100)
 VA.shuffle()
 VA.saveInitialState()
 VA.redraw()
@@ -184,12 +184,13 @@ $("#js-run").click ->
 $("#js-stop").click ->
   VA.stop = true
 
-$("#js-set-values").click ->
+$("#js-options").submit ->
   if VA.working
     return
+  $("#js-error").html("").hide()
   len = $("#js-length").val()
-  if isFinite len
-    VA.setLength +len
+  if isFinite(len)
+    VA.generateValues +len
   $("#js-length").val VA.length
 
   state = $("#js-state").val()
@@ -200,9 +201,26 @@ $("#js-set-values").click ->
   else if state == "reverse"
     VA.sort()
     VA.reverse()
+  else if state == "custom"
+    try
+      values = CoffeeScript.eval("return " + $("#js-custom-values").val())
+      VA.setValues values
+    catch error
+      $("#js-error").html(error.message).show()
+      return false
 
   VA.saveInitialState()
   VA.redraw()
+  false # don't submit the form
+
+$("#js-state").change ->
+  if $(this).val() is "custom"
+    $("#js-length").prop('disabled', true)
+    $("#js-custom-values").val('[' + _.map(VA.values, (a) -> a.value) + ']')
+    $("#custom-values").show()
+  else
+    $("#js-length").prop('disabled', false)
+    $("#custom-values").hide()
 
 $("#js-speed").change ->
   speed = $("#js-speed").val()
@@ -218,7 +236,20 @@ $("#js-quick-compare").click ->
   VA.quickCompare = $("#js-quick-compare").is(":checked")
   return
 
+$("#js-normalize-bars").click ->
+  VA.normalizeBars = $("#js-normalize-bars").is(":checked")
+  VA.scheduleFullRedraw()
+  return
+
+$("#js-always-show-level-zero").click ->
+  VA.alwaysShowLevelZero = $("#js-always-show-level-zero").is(":checked")
+  VA.scheduleFullRedraw()
+  return
+
 $(".js-show-sort").click (e) ->
   $("#js-code").val(sorts[e.currentTarget.id])
+
+$("#show-more-options").click ->
+  $("#more-options").toggle('slow')
 
 $("#js-code").val(sorts.bubble)
