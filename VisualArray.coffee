@@ -148,6 +148,7 @@ class VisualArray
   ###
   clearContext: ->
     @ctx.clearRect 0, 0, @pxWidth, @height
+
   ###
   # Redraw a part of the canvas.
   # @param {array[number]} range array of the indices to redraw. It must
@@ -202,12 +203,22 @@ class VisualArray
       j = Math.floor(Math.random() * (i+1))
       [@values[i], @values[j]] = [@values[j], @values[i]]
 
+  ###
+  # Sort the array (not visual).
+  ###
   sort: =>
     @values.sort (a, b) => a.value - b.value
 
+  ###
+  # Reverse the array (not visual).
+  ###
   reverse: =>
     @values.reverse()
 
+  ###
+  # Push a step onto the animation queue; adds the keys expected on every step.
+  # @param {map} dict The map to push onto the animation queue.
+  ###
   animationQueuePush: (dict) =>
     dict.swaps = @swaps
     dict.inserts = @inserts
@@ -226,18 +237,34 @@ class VisualArray
     for indice, i in indices
       throw new Error("#{methodName}, argument #{i+1} : #{indice} is not a valid index") if not (0 <= indice < @values.length)
 
+  ###
+  # Swap the values at indices i and j visually.
+  ###
   swap: (i, j) =>
     @checkIndexes("swap", [i, j])
     @swaps++
+
+    #these will matter when cache behavior is being checked
+    @get(i)
+    @get(j)
+
     if i == j
       return
     @animationQueuePush(type: "swap", i: i, j: j)
     [@values[i], @values[j]] = [@values[j], @values[i]]
 
+  ###
+  # Insert the value at index i to index j; shift values in-between in the appropriate direction.
+  ###
   insert: (i, j) =>
     @checkIndexes("insert", [i, j])
     @inserts++
     @shifts += Math.abs(j - i)
+
+    #these will matter when cache behavior is being checked
+    for x in [i..j]
+      @get(x)
+
     if i == j
       return
     @animationQueuePush(type: "insert", i: i, j: j)
@@ -248,37 +275,37 @@ class VisualArray
     @checkIndexes("eq", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
-    @values[i].value == @values[j].value
+    @get(i) == @get(j)
 
   neq: (i, j) =>
     @checkIndexes("neq", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
-    @values[i].value != @values[j].value
+    @get(i) != @get(j)
 
   lt: (i, j) =>
     @checkIndexes("lt", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
-    @values[i].value < @values[j].value
+    @get(i) < @get(j)
 
   gt: (i, j) =>
     @checkIndexes("gt", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
-    @values[i].value > @values[j].value
+    @get(i) > @get(j)
 
   lte: (i, j) =>
     @checkIndexes("lte", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
-    @values[i].value <= @values[j].value
+    @get(i) <= @get(j)
 
   gte: (i, j) =>
     @checkIndexes("gte", [i, j])
     @compares++
     @animationQueuePush(type: "compare", i: i, j: j)
-    @values[i].value >= @values[j].value
+    @get(i) >= @get(j)
 
   highlight: (indices) =>
     if !$.isArray indices
