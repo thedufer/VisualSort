@@ -1,7 +1,10 @@
 <html>
 <head>
+  <title>Sorting Visualizer</title>
+  <link rel="shortcut icon" href="/favicon.ico" />
   <link href="main.css" rel="stylesheet" type="text/css" />
   <script type="text/javascript" src="coffee-script.js"></script>
+  <script type="text/coffeescript" src="VisualArray.coffee"></script>
   <script type="text/coffeescript" src="graphs.coffee"></script>
   <script type="text/javascript" src="jquery-1.6.4.js"></script>
   <script type="text/javascript" src="underscore-min.js"></script>
@@ -15,18 +18,37 @@
     </div>
     <canvas id="js-canvas" width="800" height="200">Looks like your browser doesn't support the canvas element.  Try something newer, like <a href="http://www.google.com/chrome">Google Chrome</a>.</canvas>
     <br />
-    Length: <input type="text" id="js-length" value="100" />
-    <select id="js-state">
-      <option value="random" selected>Random</option>
-      <option value="sort">Sorted</option>
-      <option value="reverse">Reverse Sorted</option>
-    </select>
-    <button type="button" id="js-set-values">Set</button>
-    <br />
-    Speed: <input type="range" id="js-speed" min="10" value="50" max="500" step="10" />
-    Quick Highlight: <input type="checkbox" id="js-quick-highlight" checked />
-    Quick Compare: <input type="checkbox" id="js-quick-compare" checked />
-    <br />
+    <form id="js-options">
+      <div id="show-more-options">show/hide more options</div>
+      <label for="js-length">Length:</label>
+      <input type="text" id="js-length" value="100" />
+      <select id="js-state">
+        <option value="random" selected>Random</option>
+        <option value="sort">Sorted</option>
+        <option value="reverse">Reverse Sorted</option>
+        <option value="custom">Custom...</option>
+      </select>
+      <button id="js-set-values">Set</button>
+      <fieldset id="custom-values" class="code-example">
+        <legend>Custom values</legend>
+        Use coffeescript to declare the new values. Examples : <code>[4,7,2]</code>, <code>[-10..20]</code>, <code>[50..-30].concat [70..75]</code>
+        <textarea id="js-custom-values" class="values" rows="10"></textarea>
+      </fieldset>
+      <br />
+      <label for="js-speed">Speed:</label>
+      <input type="range" id="js-speed" min="10" value="50" max="500" step="10" />
+      <label for="js-quick-highlight">Quick Highlight:</label>
+      <input type="checkbox" id="js-quick-highlight" checked />
+      <label for="js-quick-compare">Quick Compare:</label>
+      <input type="checkbox" id="js-quick-compare" checked />
+      <div id="more-options">
+        <label for="js-normalize-bars">Normalize bars length:</label>
+        <input type="checkbox" id="js-normalize-bars" checked />
+        <br />
+        <label for="js-always-show-level-zero">Always show the level 0 :</label>
+        <input type="checkbox" id="js-always-show-level-zero" />
+      </div>
+    </form>
     <div id="right-bar">
       <div id="js-error"></div>
       # of swaps: <span id="js-swaps"></span>
@@ -44,20 +66,20 @@
     <br />
     <div id="footer">
       <div id="footer-buttons">
-        <button type="button" id="js-run" class="footer-button">Run That Code!</button>
-        <button type="button" id="js-stop" class="footer-button">Stop</button>
-        <button type="button" class="js-show-sort footer-button" id="clear">Clear</button>
+        <button id="js-run" class="footer-button">Run That Code!</button>
+        <button id="js-stop" class="footer-button">Stop</button>
+        <button class="js-show-sort footer-button" id="clear">Clear</button>
       </div>
       <br />
       Prewritten sorts:
-      <button type="button" class="js-show-sort" id="bubble">Bubble</button>
-      <button type="button" class="js-show-sort" id="select">Selection</button>
-      <button type="button" class="js-show-sort" id="insert">Insertion</button>
-      <button type="button" class="js-show-sort" id="quick">Quick</button>
-      <button type="button" class="js-show-sort" id="msbradix">MSB Radix</button>
-      <button type="button" class="js-show-sort" id="lsbradix">LSB Radix</button>
-      <button type="button" class="js-show-sort" id="merge">Merge</button>
-      <button type="button" class="js-show-sort" id="heap">Heap</button>
+      <button class="js-show-sort" id="bubble">Bubble</button>
+      <button class="js-show-sort" id="select">Selection</button>
+      <button class="js-show-sort" id="insert">Insertion</button>
+      <button class="js-show-sort" id="quick">Quick</button>
+      <button class="js-show-sort" id="msbradix">MSB Radix</button>
+      <button class="js-show-sort" id="lsbradix">LSB Radix</button>
+      <button class="js-show-sort" id="merge">Merge</button>
+      <button class="js-show-sort" id="heap">Heap</button>
       <div id="description-wrapper">
         <div id="description">
           Write some code in <a href="http://jashkenas.github.com/coffee-script/">CoffeeScript</a> and hit run.  The array will show what's going on.
