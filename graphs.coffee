@@ -161,6 +161,7 @@ sleep = (ms) ->
 window.VA = new VisualArray $("#js-canvas")[0]
 VA.generateValues(100)
 VA.shuffle()
+VA.saveForRestore()
 VA.saveInitialState()
 VA.redraw()
 
@@ -209,9 +210,16 @@ $("#js-options").submit ->
       $("#js-error").html(error.message).show()
       return false
 
+  VA.saveForRestore()
   VA.saveInitialState()
   VA.redraw()
   false # don't submit the form
+
+$("#js-restore").click ->
+  VA.restore()
+  VA.saveInitialState()
+  VA.redraw()
+  false
 
 $("#js-state").change ->
   if $(this).val() is "custom"

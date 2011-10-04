@@ -90,6 +90,8 @@ class VisualArray
       lastVal = a.value
       a.norm = @maxNorm
     @barWidth = (Math.floor @pxWidth / @length / 2) or 1
+    # make sure the new array size is saved
+    @saveForRestore()
 
   ###
   # Determine how to fit the value in the canvas.
@@ -319,6 +321,24 @@ class VisualArray
     @checkIndexes("persistHighlight", indices)
     @animationQueuePush(type: "persistHighlight", indices: indices)
 
+  ###
+  # Saves values to use as a restore point.
+  ###
+  saveForRestore: =>
+    @restoreValues = @values.slice()
+    return
+
+  ###
+  # Restore to most recent saved state.
+  ###
+  restore: =>
+    if @restoreValues
+      @values = @restoreValues.slice()
+    return
+
+  ###
+  # Sets up to begin a run.
+  ###
   saveInitialState: =>
     @animationValues = @values.slice()
     @locals = {}
