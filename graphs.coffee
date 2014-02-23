@@ -150,6 +150,17 @@ for x in [VA.length-1 ... 0] by -1
   VA.swap(x, 0)
   fix_heap(0, x)
   """
+  gnome: """
+s = 0
+pos = 0
+while pos < VA.length
+  VA.locals.pos = pos
+  if pos == 0 or VA.lte(pos-1, pos) 
+    ++pos
+  else
+    VA.swap(pos-1, pos)
+    --pos
+  """
   clear: ""
 }
 
