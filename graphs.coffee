@@ -244,7 +244,7 @@ $("#js-state").change ->
 $("#js-speed").change ->
   speed = $("#js-speed").val()
   if isFinite speed
-    VA.stepLength = +speed
+    VA.stepLength = 501 - +speed
   return
 
 $("#js-quick-highlight").click ->
