@@ -247,21 +247,33 @@ $("#js-speed").change ->
     VA.stepLength = 501 - +speed
   return
 
-$("#js-quick-highlight").click ->
+updateQuickHighlight = ->
   VA.quickHighlight = $("#js-quick-highlight").is(":checked")
+
+updateQuickCompare = ->
+  VA.quickCompare = $("#js-quick-compare").is(":checked")
+
+updateNormalizeBars = ->
+  VA.normalizeBars = $("#js-normalize-bars").is(":checked")
+
+updateAlwaysShowLevelZero = ->
+  VA.alwaysShowLevelZero = $("#js-always-show-level-zero").is(":checked")
+
+$("#js-quick-highlight").click ->
+  updateQuickHighlight()
   return
 
 $("#js-quick-compare").click ->
-  VA.quickCompare = $("#js-quick-compare").is(":checked")
+  updateQuickCompare()
   return
 
 $("#js-normalize-bars").click ->
-  VA.normalizeBars = $("#js-normalize-bars").is(":checked")
+  updateNormalizeBars()
   VA.scheduleFullRedraw()
   return
 
 $("#js-always-show-level-zero").click ->
-  VA.alwaysShowLevelZero = $("#js-always-show-level-zero").is(":checked")
+  updateAlwaysShowLevelZero()
   VA.scheduleFullRedraw()
   return
 
@@ -272,3 +284,10 @@ $("#show-more-options").click ->
   $("#more-options").toggle('slow')
 
 $("#js-code").val(sorts.bubble)
+
+$(document).ready ->
+  updateQuickHighlight()
+  updateQuickCompare()
+  updateNormalizeBars()
+  updateAlwaysShowLevelZero()
+  VA.scheduleFullRedraw()
