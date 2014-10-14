@@ -45,15 +45,25 @@ class VisualArray
     # If false, center the canvas on min - max.
     ###
     @alwaysShowLevelZero = false
-    @colors = {
+    @lightColors = {
       normal: "rgb(0,0,0)"
       swap: "rgb(255, 0, 0)"
       highlight: "rgb(0,255,0)"
       persistHighlight: "rgb(0,127,0)"
-      compare: "rgb(127,0,200)"
+      compare: "rgb(200,200,0)"
       insert: "rgb(0,0,255)"
       slide: "rgb(127,127,255)"
     }
+    @darkColors = {
+      normal: "rgb(200,200,200)"
+      swap: "rgb(255,127,127)"
+      highlight: "rgb(0,255,0)"
+      persistHighlight: "rgb(200,255,200)"
+      compare: "rgb(255,255,64)"
+      insert: "rgb(0,127,255)"
+      slide: "rgb(127,192,255)"
+    }
+    @colors = @lightColors
 
   ###
   # Generate and set an array of random values of the specified length.

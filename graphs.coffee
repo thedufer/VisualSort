@@ -259,6 +259,14 @@ updateNormalizeBars = ->
 updateAlwaysShowLevelZero = ->
   VA.alwaysShowLevelZero = $("#js-always-show-level-zero").is(":checked")
 
+updateTheme = ->
+  if $("#js-lights-off").is(":checked")
+    $("#theme").attr({href : "dark.css"})
+    VA.colors = VA.darkColors
+  else
+    $("#theme").attr({href : "light.css"})
+    VA.colors = VA.lightColors
+
 $("#js-quick-highlight").click ->
   updateQuickHighlight()
   return
@@ -277,6 +285,11 @@ $("#js-always-show-level-zero").click ->
   VA.scheduleFullRedraw()
   return
 
+$("#js-lights-off").click ->
+  updateTheme()
+  VA.scheduleFullRedraw()
+  return
+
 $(".js-show-sort").click (e) ->
   $("#js-code").val(sorts[e.currentTarget.id])
 
@@ -290,4 +303,5 @@ $(document).ready ->
   updateQuickCompare()
   updateNormalizeBars()
   updateAlwaysShowLevelZero()
+  updateTheme()
   VA.scheduleFullRedraw()

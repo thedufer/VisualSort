@@ -1,0 +1,6 @@
+body { background-color: #000; }
+#background { background-color: #222; color: #ddd; }
+#description { background-color:#444; color: #ddd; }
+#right-bar { background-color:#444; color: #ddd; }
+#js-code { background-color: #000; color: #ddd; }
+.code-example code { border: 1px solid #888 !important; }

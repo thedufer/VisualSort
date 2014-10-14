@@ -13,7 +13,6 @@
 #background{
   width:900px;
   margin:0 auto;
-  background-color:#eee;
 }
 
 #description-wrapper{
@@ -33,9 +32,6 @@ ul {
   font-size:110%;
 }
 
-#description{
-  background-color:#ddd;
-}
 
 #wrapper{
   width:800px;
@@ -65,7 +61,6 @@ ul {
 #right-bar{
   width:200px;
   float:right;
-  background-color:#ddd;
 }
 
 #footer{
@@ -84,6 +79,3 @@ ul {
   cursor: pointer;
 }
 
-.code-example code{
-  border: 1px solid #BBB !important;
-}
