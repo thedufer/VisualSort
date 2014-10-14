@@ -26,10 +26,10 @@ for x in [0...VA.length - 1]
   """
   insert: """
 for x in [1...VA.length]
-  y = 0
-  while VA.gt(x, y)
-    y++
-    if y == x
+  y = x
+  while VA.gt(y - 1, x)
+    y--
+    if y == 0
       break
   VA.insert(x, y)
   """
