@@ -4,3 +4,5 @@ body { background-color: #000; }
 #right-bar { background-color:#444; color: #ddd; }
 #js-code { background-color: #000; color: #ddd; }
 .code-example code { border: 1px solid #888 !important; }
+a:link { color: #9cf; }
+a:visited { color: #c9c; }
