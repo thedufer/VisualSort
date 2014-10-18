@@ -27,11 +27,16 @@ for x in [0...VA.length - 1]
   insert: """
 for x in [1...VA.length]
   y = x
-  while VA.gt(y - 1, x)
+  while y > 0 and VA.gt(y - 1, x)
     y--
-    if y == 0
-      break
   VA.insert(x, y)
+  """
+  insertswap: """
+for x in [1...VA.length]
+  y = x
+  while y > 0 and VA.gt(y - 1, y)
+    VA.swap(y - 1, y)
+    y--
   """
   quick: """
 slowsort = (left, right) ->
