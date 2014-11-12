@@ -50,7 +50,7 @@ class VisualArray
       swap: "rgb(255, 0, 0)"
       highlight: "rgb(0,255,0)"
       persistHighlight: "rgb(0,127,0)"
-      compare: "rgb(127,0,200)"
+      compare: "rgb(237,220,0)"
       insert: "rgb(0,0,255)"
       slide: "rgb(127,127,255)"
     }
