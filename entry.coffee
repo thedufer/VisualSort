@@ -1,4 +1,6 @@
-$("#js-stop").hide()
+$ = require('jquery')
+_ = require('underscore')
+VisualArray = require('./VisualArray.coffee')
 
 sorts = {
   bubble: """
@@ -160,7 +162,7 @@ s = 0
 pos = 0
 while pos < VA.length
   VA.locals.pos = pos
-  if pos == 0 or VA.lte(pos-1, pos) 
+  if pos == 0 or VA.lte(pos-1, pos)
     ++pos
   else
     VA.swap(pos-1, pos)
@@ -169,128 +171,130 @@ while pos < VA.length
   clear: ""
 }
 
-sleep = (ms) ->
-  start = new Date()
-  while((new Date()) - start < ms)
-    0
+$(document).ready ->
+  $("#js-stop").hide()
 
-window.VA = new VisualArray $("#js-canvas")[0]
-VA.generateValues(100)
-VA.shuffle()
-VA.saveForRestore()
-VA.saveInitialState()
-VA.redraw()
+  sleep = (ms) ->
+    start = new Date()
+    while((new Date()) - start < ms)
+      0
 
-evaluate = (code) ->
-  $("#js-error").html("").hide()
-  if VA.working
-    return
-  VA.saveInitialState()
-  VA.starting()
-  try
-    CoffeeScript.eval(code)
-  catch error
-    $("#js-error").html(error.message).show()
-  VA.play()
-
-$("#js-run").click ->
-  $("#js-run").hide()
-  $("#js-stop").show()
-  evaluate $("#js-code").val()
-
-$("#js-stop").click ->
-  VA.stop = true
-
-$("#js-options").submit ->
-  if VA.working
-    return
-  $("#js-error").html("").hide()
-  len = $("#js-length").val()
-  if isFinite(len)
-    VA.generateValues +len
-  $("#js-length").val VA.length
-
-  state = $("#js-state").val()
-  if state == "random"
-    VA.shuffle()
-  else if state == "sort"
-    VA.sort()
-  else if state == "reverse"
-    VA.sort()
-    VA.reverse()
-  else if state == "custom"
-    try
-      values = CoffeeScript.eval("return " + $("#js-custom-values").val())
-      VA.setValues values
-    catch error
-      $("#js-error").html(error.message).show()
-      return false
-
+  window.VA = new VisualArray($("#js-canvas")[0])
+  VA.generateValues(100)
+  VA.shuffle()
   VA.saveForRestore()
   VA.saveInitialState()
   VA.redraw()
-  false # don't submit the form
 
-$("#js-restore").click ->
-  VA.restore()
-  VA.saveInitialState()
-  VA.redraw()
-  false
+  evaluate = (code) ->
+    $("#js-error").html("").hide()
+    if VA.working
+      return
+    VA.saveInitialState()
+    VA.starting()
+    try
+      CoffeeScript.eval(code)
+    catch error
+      $("#js-error").html(error.message).show()
+    VA.play()
 
-$("#js-state").change ->
-  if $(this).val() is "custom"
-    $("#js-length").prop('disabled', true)
-    $("#js-custom-values").val('[' + _.map(VA.values, (a) -> a.value) + ']')
-    $("#custom-values").show()
-  else
-    $("#js-length").prop('disabled', false)
-    $("#custom-values").hide()
+  $("#js-run").click ->
+    $("#js-run").hide()
+    $("#js-stop").show()
+    evaluate $("#js-code").val()
 
-$("#js-speed").change ->
-  speed = $("#js-speed").val()
-  if isFinite speed
-    VA.stepLength = 501 - +speed
-  return
+  $("#js-stop").click ->
+    VA.stop = true
 
-updateQuickHighlight = ->
-  VA.quickHighlight = $("#js-quick-highlight").is(":checked")
+  $("#js-options").submit ->
+    if VA.working
+      return
+    $("#js-error").html("").hide()
+    len = $("#js-length").val()
+    if isFinite(len)
+      VA.generateValues +len
+    $("#js-length").val VA.length
 
-updateQuickCompare = ->
-  VA.quickCompare = $("#js-quick-compare").is(":checked")
+    state = $("#js-state").val()
+    if state == "random"
+      VA.shuffle()
+    else if state == "sort"
+      VA.sort()
+    else if state == "reverse"
+      VA.sort()
+      VA.reverse()
+    else if state == "custom"
+      try
+        values = CoffeeScript.eval("return " + $("#js-custom-values").val())
+        VA.setValues values
+      catch error
+        $("#js-error").html(error.message).show()
+        return false
 
-updateNormalizeBars = ->
-  VA.normalizeBars = $("#js-normalize-bars").is(":checked")
+    VA.saveForRestore()
+    VA.saveInitialState()
+    VA.redraw()
+    false # don't submit the form
 
-updateAlwaysShowLevelZero = ->
-  VA.alwaysShowLevelZero = $("#js-always-show-level-zero").is(":checked")
+  $("#js-restore").click ->
+    VA.restore()
+    VA.saveInitialState()
+    VA.redraw()
+    false
 
-$("#js-quick-highlight").click ->
-  updateQuickHighlight()
-  return
+  $("#js-state").change ->
+    if $(this).val() is "custom"
+      $("#js-length").prop('disabled', true)
+      $("#js-custom-values").val('[' + _.map(VA.values, (a) -> a.value) + ']')
+      $("#custom-values").show()
+    else
+      $("#js-length").prop('disabled', false)
+      $("#custom-values").hide()
 
-$("#js-quick-compare").click ->
-  updateQuickCompare()
-  return
+  $("#js-speed").change ->
+    speed = $("#js-speed").val()
+    if isFinite speed
+      VA.stepLength = 501 - +speed
+    return
 
-$("#js-normalize-bars").click ->
-  updateNormalizeBars()
-  VA.scheduleFullRedraw()
-  return
+  updateQuickHighlight = ->
+    VA.quickHighlight = $("#js-quick-highlight").is(":checked")
 
-$("#js-always-show-level-zero").click ->
-  updateAlwaysShowLevelZero()
-  VA.scheduleFullRedraw()
-  return
+  updateQuickCompare = ->
+    VA.quickCompare = $("#js-quick-compare").is(":checked")
 
-$(".js-show-sort").click (e) ->
-  $("#js-code").val(sorts[e.currentTarget.id])
+  updateNormalizeBars = ->
+    VA.normalizeBars = $("#js-normalize-bars").is(":checked")
 
-$("#show-more-options").click ->
-  $("#more-options").toggle('slow')
+  updateAlwaysShowLevelZero = ->
+    VA.alwaysShowLevelZero = $("#js-always-show-level-zero").is(":checked")
 
-$("#js-code").val(sorts.bubble)
+  $("#js-quick-highlight").click ->
+    updateQuickHighlight()
+    return
 
-$(document).ready ->
+  $("#js-quick-compare").click ->
+    updateQuickCompare()
+    return
+
+  $("#js-normalize-bars").click ->
+    updateNormalizeBars()
+    VA.scheduleFullRedraw()
+    return
+
+  $("#js-always-show-level-zero").click ->
+    updateAlwaysShowLevelZero()
+    VA.scheduleFullRedraw()
+    return
+
+  $(".js-show-sort").click (e) ->
+    $("#js-code").val(sorts[e.currentTarget.id])
+
+  $("#show-more-options").click ->
+    $("#more-options").toggle('slow')
+
+  $("#js-code").val(sorts.bubble)
+
   updateQuickHighlight()
   updateQuickCompare()
   updateNormalizeBars()

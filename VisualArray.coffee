@@ -1,3 +1,6 @@
+$ = require('jquery')
+_ = require('underscore')
+
 ###
 # Represent an element in the to-be-sorted array.
 # It has two attributes :
@@ -21,7 +24,7 @@ class Element
 
 class VisualArray
   constructor: (@canvas) ->
-    @ctx = canvas.getContext('2d')
+    @ctx = @canvas.getContext('2d')
     @height = 200
     @pxWidth = 800
     @maxLength = @pxWidth / 2
@@ -459,4 +462,4 @@ class VisualArray
       setTimeout @play, @stepLength
 
 # export the VisualArray class.
-@VisualArray = VisualArray
+module.exports = VisualArray
